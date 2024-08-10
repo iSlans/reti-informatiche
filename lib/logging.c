@@ -5,19 +5,28 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define RED(str) "\x1b[31m" str "\x1b[0m"
+#define GREEN(str) "\x1b[32m" str "\x1b[0m"
+#define YELLOW(str) "\x1b[33m" str "\x1b[0m"
+#define BLUE(str) "\x1b[34m" str "\x1b[0m"
+#define MAGENTA(str) "\x1b[35m" str "\x1b[0m"
+#define CYAN(str) "\x1b[36m" str "\x1b[0m"
+#define GRAY(str) "\x1b[90m" str "\x1b[0m"
+
 /**
  * Custom logger
+ *
  */
 
 /* 'static' to limit function scope */
 void logging(const char* level, const char* msg, va_list args) {
-    char buffer[30];
+    char timestamp[30];
 
     time_t now;
     time(&now);
-    strftime(buffer, sizeof buffer, "%H:%M:%S", localtime(&now));
+    strftime(timestamp, sizeof timestamp, "%Y-%m-%d %H:%M:%S", localtime(&now));
 
-    printf("%s [%s]: ", buffer, level);
+    printf(GRAY("%s") " [%s]: ", timestamp, level);
     vprintf(msg, args);
     printf("\n");
 }
@@ -25,20 +34,27 @@ void logging(const char* level, const char* msg, va_list args) {
 void logging_info(const char* msg, ...) {
     va_list args;
     va_start(args, msg);
-    logging("INFO", msg, args);
+    logging(CYAN("INFO"), msg, args);
+    va_end(args);
+}
+
+void logging_warn(const char* msg, ...) {
+    va_list args;
+    va_start(args, msg);
+    logging(YELLOW("WARNING"), msg, args);
     va_end(args);
 }
 
 void logging_error(const char* msg, ...) {
     va_list args;
     va_start(args, msg);
-    logging("ERROR", msg, args);
+    logging(RED("ERROR"), msg, args);
     va_end(args);
 }
 
 void logging_debug(const char* msg, ...) {
     va_list args;
     va_start(args, msg);
-    logging("DEBUG", msg, args);
+    logging(GREEN("DEBUG"), msg, args);
     va_end(args);
 }
