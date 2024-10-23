@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "logging.h"
+#include "lib/logging.h"
 
 int main(int argc, char** argv) {
     logging_info("aaa");

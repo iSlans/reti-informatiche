@@ -1,23 +1,24 @@
 
 CC := gcc
-CFLAGS := -I./lib -Wall -std=c89
+CFLAGS := -Wall #-std=c89
 
 all: test
 # all: server client other 
 
-test: test.o
-	$(CC) $(CFLAGS) -o test test.c lib/*
+test: 
+	$(CC) $(CFLAGS) -o test Server/test.c Server/lib/logging.c
 	
-server: server.o
-	$(CC) $(CFLAGS) -o server server.c lib/*
+server: 
+	$(CC) $(CFLAGS) -o server Server/server.c Server/lib/logging.c
 
-client: client.o
-	$(CC) $(CFLAGS) -o client client.c
+client: 
+	$(CC) $(CFLAGS) -o client Client/client.c
 
-other: other.o
+other: 
 	$(CC) $(CFLAGS) -o other other.c
 
-.PHONY: clean
+.PHONY: clean # <make clean> will work if exists a "clean" named file  
 clean:
-	rm *o client server other
+	rm *o test client server other
+# rm *o client server other
 

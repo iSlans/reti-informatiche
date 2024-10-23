@@ -15,13 +15,11 @@
 
 /**
  * Custom logger
- *
+ * using ANSI codes to get colored prints
  */
 
-/* 'static' to limit function scope */
 void logging(const char* level, const char* msg, va_list args) {
     char timestamp[30];
-
     time_t now;
     time(&now);
     strftime(timestamp, sizeof timestamp, "%Y-%m-%d %H:%M:%S", localtime(&now));
