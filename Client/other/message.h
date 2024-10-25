@@ -1,3 +1,6 @@
+#ifndef MESSAGE_H
+#define MESSAGE_H
+
 struct Message {
     const char* welcome;
     const char* login_page;
@@ -12,6 +15,7 @@ struct Message message = {
         ">> login               - to login with an already registered account\n"
         ">> signup              - to register a new account\n"
         ">> end                 - to exit and close the game\n"
+        ">> help                - to show this message again\n"
 
     ,
     .game_list_page =
@@ -25,3 +29,5 @@ struct Message message = {
 
     ,
 };
+
+#endif
