@@ -1,8 +1,7 @@
 #ifndef LOGIN_PAGE_H
 #define LOGIN_PAGE_H
 
-int get_login_page_command();
-
+enum UserCommand get_login_page_command();
 int do_login();
 int do_signup();
 

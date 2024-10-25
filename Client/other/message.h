@@ -23,9 +23,10 @@ struct Message message = {
         "1. Elementals\n"
         "\n"
         "commands:\n"
-        ">> start <room>       - to start a game with id <room> \n"
+        ">> start <room>       - to start a game with number id <room> \n"
         ">> logout             - to logout and return to login page\n"
         ">> end                - to exit and close the game\n"
+        ">> help               - to show this message again\n"
 
     ,
 };
