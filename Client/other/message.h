@@ -9,7 +9,7 @@ struct Message message = {
     .login_page =
         "Welcome to Escape Room Game!\n"
         "Please login to get started:\n"
-        ">> login <username>    - to login with an already registered account\n"
+        ">> login               - to login with an already registered account\n"
         ">> signup              - to register a new account\n"
         ">> end                 - to exit and close the game\n"
 

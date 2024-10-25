@@ -1,8 +1,9 @@
 
 struct Connection {
-    int (*get_conn_socket)();
+    int (*get_socket)();
     int (*connect)(const char* ip, int port);
-    void (*close)();
+    int (*close)();
+    int (*request)(char* payload, char* response, unsigned int resp_len);
 };
 
 extern const struct Connection connection;

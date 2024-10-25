@@ -5,9 +5,18 @@
 #include <string.h>
 #include <unistd.h>
 
-int conn_socket;
+#define MAX_PAYLOAD_SIZE 128
+#define MAX_RESPONSE_SIZE 128
+
+// limit scope
+static int conn_socket;
+static int conn_is_open = 0;
 
 int get_conn_socket() {
+    if (!conn_is_open) {
+        printf("No connection opened yet\n");
+        return -1;
+    }
     return conn_socket;
 }
 
@@ -29,16 +38,64 @@ int connect_server(const char* ip, int port) {
         return -1;
     }
 
+    conn_is_open = 1;
     return conn_socket;
 }
 
-void close_connection() {
-    printf("closing connection\n");
-    close(conn_socket);
+int close_connection() {
+    int ret;
+    if (!conn_is_open) {
+        printf("There is no connection to close\n");
+        return -1;
+    }
+    ret = close(conn_socket);
+    if (ret == -1) {
+        perror("Error closing connection: ");
+        return -1;
+    }
+    conn_is_open = 0;
+    /* printf("closing connection\n"); */
+    return 0;
+}
+
+int request(char* payload, char* response, unsigned int resp_len) {
+    int ret;
+    size_t payload_len;
+
+    if (!conn_is_open) {
+        printf("No connection opened yet\n");
+        return -1;
+    }
+
+    payload_len = strlen(payload);
+    if (payload_len > MAX_PAYLOAD_SIZE) {
+        printf("Payload size too big, max supported: %d\n", MAX_PAYLOAD_SIZE);
+        return -1;
+    }
+
+    if (resp_len > MAX_RESPONSE_SIZE) {
+        printf("Response size too big, max supported: %d\n", MAX_RESPONSE_SIZE);
+        return -1;
+    }
+
+    ret = send(conn_socket, payload, payload_len, 0);
+    if (ret == -1) {
+        perror("Error sending payload: ");
+        return -1;
+    }
+
+    ret = recv(conn_socket, response, resp_len, 0);
+    if (ret == -1) {
+        perror("Error receiving response: ");
+        return -1;
+    }
+
+    return 0;
 }
 
 const struct Connection connection = {
-    .get_conn_socket = get_conn_socket,
+    .get_socket = get_conn_socket,
     .connect = connect_server,
     .close = close_connection,
+    .request = request,
 };
