@@ -7,7 +7,7 @@ enum UserCommand {
     COMMAND_START,
     COMMAND_LOGOUT,
     COMMAND_END,
-    COMMAND_HELP,
+    COMMAND_HELP
 };
 
 void get_input_line(char* buffer, unsigned int max_len);

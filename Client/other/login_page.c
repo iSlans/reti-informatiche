@@ -13,10 +13,10 @@ enum UserCommand get_login_page_command() {
     enum UserCommand command_id;
     int valid = 0;
     do {
-        printf(">> ");
-
         char command[16] = "";
         char line[16] = "";
+
+        printf(">> ");
         get_input_line(line, 16);
         sscanf(line, "%15s", command);
         command[15] = '\0';
@@ -78,8 +78,6 @@ int do_login() {
     } while (!valid);
 
     /* hash(pass); */
-
-    // return 0;
 
     sprintf(payload, "USR LOGIN %s %s", user, pass);
     ret = connection.request(payload, response, sizeof(response));
