@@ -3,7 +3,8 @@
 
 struct Session {
     int logged;
-    int close_client;
+    int close_client;  // would be more appropriate as an app state instead of session state
+    // char* token;    // could implement session token
 };
 
 enum UserCommand {

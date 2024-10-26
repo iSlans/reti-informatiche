@@ -2,30 +2,32 @@
 
 #include <stdio.h>
 #include <string.h>
-// #include <unistd.h> sleep
+// #include <unistd.h>  //sleep
 
 #include "connection.h"
+#include "games_list.h"
 #include "message.h"
 #include "utility.h"
 
-struct RoomGame {
-    char id[16];
-    char name[16];
-    unsigned int code;
-    // ...
-};
+enum UserCommand get_game_page_command(char* arg0);
+int get_game_idx_from_id(char* gameid);
+int do_start(char* arg0);
+int do_logout();
 
-struct RoomGame availableGames[] = {
-    {.id = "1", .name = "Elementals", .code = 1},
-};
-
-/* ------------------------- show games and commands ------------------------ */
+/**
+ * Main Game Page function
+ * show games list and commands
+ * and execute the commands
+ */
 void game_page(struct Session* session) {
     int ret;
     int can_exit = 0;
 
-    if (!session->logged) return;
     if (session->close_client) return;
+    if (!session->logged) {
+        printf("User not logged in");
+        return;
+    }
 
     printf("%s\n", message.game_list_page);
 
@@ -35,9 +37,6 @@ void game_page(struct Session* session) {
 
         switch (command) {
             case COMMAND_START:
-                /*
-                 start server game session, get game end time
-                */
                 ret = do_start(arg);
                 if (ret == -1) {
                     continue;
@@ -52,6 +51,10 @@ void game_page(struct Session* session) {
                 }
                 session->logged = 0;
                 can_exit = 1;
+                printf(
+                    "Logged out\n"
+                    "Returning to Login page...\n\n");
+                // sleep(1);
                 break;
 
             case COMMAND_END:
@@ -71,9 +74,13 @@ void game_page(struct Session* session) {
     return;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                             auxiliary functions                            */
+/* -------------------------------------------------------------------------- */
+
 /**
  * Get a valid game page command
- * arg0 size >= 16...
+ * need an arg0 argument for start command, with size >= 16...
  */
 enum UserCommand get_game_page_command(char* arg0) {
     enum UserCommand command_id;
@@ -84,14 +91,16 @@ enum UserCommand get_game_page_command(char* arg0) {
         char line[32] = "";
 
         printf(">> ");
-        get_input_line(line, 32);
+        get_input_line(line, sizeof(line));
         sscanf(line, "%15s %15s", command, arg);
 
         if (strcmp(command, "") == 0) {
             continue;
         } else if (strcmp(command, "start") == 0) {
             if (strcmp(arg, "") == 0) {
-                printf("No room selected\n");
+                printf(
+                    "No room selected\n"
+                    "Please selected one by adding the room id in 'start <room>' command\n");
                 continue;
             }
             strcpy(arg0, arg);
@@ -114,27 +123,53 @@ enum UserCommand get_game_page_command(char* arg0) {
     return command_id;
 }
 
-int get_game_code_from_id(char* gameid) {
+int get_game_idx_from_id(char* gameid) {
     int len = sizeof(availableGames) / sizeof(struct RoomGame);
     for (int i = 0; i < len; i++) {
         if (strcmp(availableGames[i].id, gameid) == 0) {
-            return availableGames[i].code;
+            return i;
         }
     }
     return -1;
 }
 
-int do_start() {
-    get_game_code_from_id("");
-    printf("Game start!\n");
-    getchar();
+/**
+ *
+ * return -1 if error
+ */
+int do_start(char* arg0) {
+    int game_idx = get_game_idx_from_id(arg0);
+    if (game_idx == -1) {
+        printf("Selected game room not found!\n");
+        return -1;
+    }
 
+    availableGames[game_idx].play();
+
+    // printf("Game start!\n");
+    // getchar();
     printf("Game end, press any key to return to game list page\n");
     getchar();
 
     return 0;
 }
+
+/**
+ * Send Logout request to server
+ */
 int do_logout() {
-    printf("Logged out\n");
-    return 0;
+    int ret;
+    char payload[16] = "USR LOGOUT";
+    char response[16] = "";
+
+    ret = connection.request(payload, response, sizeof(response));
+    if (ret == -1) {
+        printf("Error on reaching the server, please retry...\n");
+        return -1;
+    }
+
+    if (strcmp(response, "OK") == 0) {
+        return 0;
+    }
+    return -1;
 }

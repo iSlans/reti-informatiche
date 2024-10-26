@@ -15,7 +15,7 @@
 static int conn_socket;
 static int conn_is_open = 0;
 
-int get_conn_socket() {
+static int get_conn_socket() {
     if (!conn_is_open) {
         printf("No connection opened yet\n");
         return -1;
@@ -23,7 +23,7 @@ int get_conn_socket() {
     return conn_socket;
 }
 
-int connect_server(const char* ip, int port) {
+static int connect_server(const char* ip, int port) {
     int ret;
     struct sockaddr_in server_addr;
 
@@ -50,7 +50,7 @@ int connect_server(const char* ip, int port) {
     return conn_socket;
 }
 
-int close_connection() {
+static int close_connection() {
     int ret;
     if (!conn_is_open) {
         printf("There is no connection to close\n");
@@ -66,7 +66,7 @@ int close_connection() {
     return 0;
 }
 
-int request(char* payload, char* response, unsigned int resp_len) {
+static int request(char* payload, char* response, unsigned int resp_len) {
     int ret;
     size_t payload_len;
 

@@ -5,10 +5,11 @@
 #include "other/connection.h"
 #include "other/game_page.h"
 #include "other/login_page.h"
-#include "other/message.h"
 #include "other/session.h"
-#include "other/utility.h"
+// #include "other/message.h"
+// #include "other/utility.h"
 
+// could try make a config file
 const char* SERVER_IP = "127.0.0.1";
 const int SERVER_PORT = 4242;
 

@@ -64,7 +64,7 @@ enum UserCommand get_login_page_command() {
         char line[16] = "";
 
         printf(">> ");
-        get_input_line(line, 16);
+        get_input_line(line, sizeof(line));
         sscanf(line, "%15s", command);
         command[15] = '\0';
 

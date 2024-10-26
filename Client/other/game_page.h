@@ -6,8 +6,8 @@
 
 void game_page(struct Session* session);
 
-enum UserCommand get_game_page_command(char* arg0);
-int get_game_code_from_id(char* gameid);
-int do_start();
-int do_logout();
+// enum UserCommand get_game_page_command(char* arg0);
+// int get_game_idx_from_id(char* gameid);
+// int do_start();
+// int do_logout();
 #endif
