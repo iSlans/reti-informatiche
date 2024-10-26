@@ -4,10 +4,62 @@
 #include <string.h>
 
 #include "connection.h"
+#include "message.h"
+#include "session.h"
 #include "utility.h"
 
 #define USER_LEN 32
 #define PASS_LEN 32
+
+/**
+ * show initial screen
+ * and manage login commands
+ */
+void login_page(struct Session* session) {
+    /*
+        void login_page(void* session) {
+        struct Session* global = &session;
+        global->close_client;
+    */
+    int ret;
+
+    if (session->logged) return;
+    if (session->close_client) return;
+
+    printf("%s\n", message.login_page);
+
+    do {
+        enum UserCommand command = get_login_page_command();
+
+        switch (command) {
+            case COMMAND_LOGIN:
+                ret = do_login();
+                if (ret == -1) continue;
+                session->logged = 1;
+                break;
+
+            case COMMAND_SIGNUP:
+                ret = do_signup();
+                if (ret == -1) continue;
+                session->logged = 1;
+                break;
+
+            case COMMAND_END:
+                session->close_client = 1;
+                return;
+                break;
+
+            case COMMAND_HELP:
+                printf("\n%s\n", message.login_page);
+                break;
+
+            default:;
+        }
+
+    } while (!session->logged);
+
+    return;
+}
 
 enum UserCommand get_login_page_command() {
     enum UserCommand command_id;
