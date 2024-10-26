@@ -16,11 +16,6 @@
  * and manage login commands
  */
 void login_page(struct Session* session) {
-    /*
-        void login_page(void* session) {
-        struct Session* global = &session;
-        global->close_client;
-    */
     int ret;
 
     if (session->logged) return;
