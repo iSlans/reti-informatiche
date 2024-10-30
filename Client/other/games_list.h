@@ -1,21 +1,22 @@
 #ifndef GAMES_LIST_H
 #define GAMES_LIST_H
 
-#define NUMBER_GAMES 1
+// #define NUMBER_GAMES 1
 
 struct RoomGame {
-    char id[16];
-    char name[16];
-    void (*play)();
-    // unsigned int code;
+    char id[16];              // client side identifier
+    char name[16];            //
+    void (*play)(char* arg);  // 'executable' to run the game
+    // unsigned int code;     // server side identifier
     // ...
 };
 
-extern struct RoomGame availableGames[NUMBER_GAMES];
+extern struct RoomGame available_games[];
+extern unsigned int len_available_games;
 
-void game1();
-// void game2();
-// void game3();
-// void game4();
+void play_game_type_1(char* game_id);
+// void play_game_type_2();
+// void play_game_type_3();
+// void play_game_type_4();
 
 #endif

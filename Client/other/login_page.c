@@ -8,8 +8,8 @@
 #include "session.h"
 #include "utility.h"
 
-#define USER_LEN 32
-#define PASS_LEN 32
+// #define USER_LEN 32
+// #define PASS_LEN 32
 
 /**
  * show initial screen

@@ -124,9 +124,9 @@ enum UserCommand get_game_page_command(char* arg0) {
 }
 
 int get_game_idx_from_id(char* gameid) {
-    int len = sizeof(availableGames) / sizeof(struct RoomGame);
+    int len = len_available_games;
     for (int i = 0; i < len; i++) {
-        if (strcmp(availableGames[i].id, gameid) == 0) {
+        if (strcmp(available_games[i].id, gameid) == 0) {
             return i;
         }
     }
@@ -138,13 +138,14 @@ int get_game_idx_from_id(char* gameid) {
  * return -1 if error
  */
 int do_start(char* arg0) {
-    int game_idx = get_game_idx_from_id(arg0);
-    if (game_idx == -1) {
+    struct RoomGame* game_list = &available_games[0];
+    int index = get_game_idx_from_id(arg0);
+    if (index == -1) {
         printf("Selected game room not found!\n");
         return -1;
     }
 
-    availableGames[game_idx].play();
+    game_list[index].play(game_list[index].id);
 
     // printf("Game start!\n");
     // getchar();

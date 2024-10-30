@@ -11,6 +11,8 @@
 #define MAX_PAYLOAD_SIZE 128
 #define MAX_RESPONSE_SIZE 128
 
+// Could try make a struct member to contains these info,
+// so would not limited to only one instance
 /*limit scope*/
 static int conn_socket;
 static int conn_is_open = 0;
@@ -26,6 +28,8 @@ static int get_conn_socket() {
 static int connect_server(const char* ip, int port) {
     int ret;
     struct sockaddr_in server_addr;
+
+    // if (conn_is_open) ...
 
     conn_socket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -66,6 +70,9 @@ static int close_connection() {
     return 0;
 }
 
+/**
+ * aaa
+ */
 static int request(char* payload, char* response, unsigned int resp_len) {
     int ret;
     size_t payload_len;
@@ -91,9 +98,18 @@ static int request(char* payload, char* response, unsigned int resp_len) {
         return 0;
     }
 
+    // TODO
+    // exchange sizes
+    // send(len)
+    // recv(max_server_len)
+    // if (max_server_len < len) ...
+
     ret = send(conn_socket, payload, payload_len, 0);
     if (ret == -1) {
         perror("Error sending payload: ");
+        return -1;
+    }
+    if (ret < payload_len) {
         return -1;
     }
 
