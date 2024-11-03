@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -10,6 +11,15 @@
 int logged = 0;
 int close_client = 0;
 int main() {
+    connection.connect("127.0.0.1", 4242);
+
+    int sd = connection.get_socket();
+
+    char payload[128] = "OH YEAH";
+    char response[128] = "";
+
+    connection.request(payload, response, sizeof(response));
+
     return 0;
 }
 void aa() {

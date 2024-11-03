@@ -1,11 +1,12 @@
 #include "connection.h"
 
 #include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#define MOCK 1
+#define MOCK 0
 #define MOCK_RESPONSE "OK"
 
 #define MAX_PAYLOAD_SIZE 128
@@ -82,7 +83,7 @@ static int request(char* payload, char* response, unsigned int resp_len) {
         return -1;
     }
 
-    payload_len = strlen(payload);
+    payload_len = strlen(payload) + 1;
     if (payload_len > MAX_PAYLOAD_SIZE) {
         printf("Payload size too big, max supported: %d\n", MAX_PAYLOAD_SIZE);
         return -1;
@@ -104,20 +105,52 @@ static int request(char* payload, char* response, unsigned int resp_len) {
     // recv(max_server_len)
     // if (max_server_len < len) ...
 
+    uint16_t msg_len;
+
+    msg_len = htons(payload_len);
+
+    ret = send(conn_socket, &msg_len, sizeof(uint16_t), 0);
+    if (ret == -1) {
+        perror("Error sending payload len");
+        // if(errno == ECONNRESET){}
+        printf("Closed connection with server, please close and restart the client ");
+        conn_is_open = 0;
+        return -1;
+    }
+    if (ret < sizeof(uint16_t)) {
+        printf("Error sending payload len");
+        return -1;
+    }
+
     ret = send(conn_socket, payload, payload_len, 0);
     if (ret == -1) {
-        perror("Error sending payload: ");
+        perror("Error sending payload");
         return -1;
     }
     if (ret < payload_len) {
         return -1;
     }
 
-    ret = recv(conn_socket, response, resp_len, 0);
+    char buffer[MAX_RESPONSE_SIZE];
+
+    ret = recv(conn_socket, &msg_len, sizeof(uint16_t), 0);
     if (ret == -1) {
-        perror("Error receiving response: ");
+        perror("Error receiving response len");
         return -1;
     }
+
+    int len = ntohs(msg_len);
+    if (len > MAX_RESPONSE_SIZE) {
+        printf("Got server response size too big, max supported: %d\n", MAX_RESPONSE_SIZE);
+        return -1;
+    }
+    ret = recv(conn_socket, buffer, len, 0);
+    if (ret == -1) {
+        perror("Error receiving response");
+        return -1;
+    }
+
+    strcpy(response, buffer);
 
     return 0;
 }

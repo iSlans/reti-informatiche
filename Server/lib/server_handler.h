@@ -2,7 +2,7 @@
 #define SERVER_HANDLER_H
 
 struct ServerState {
-    char* ip;
+    char ip[16];
     int port;
     int listening;
     int listener_fd;

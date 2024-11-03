@@ -75,7 +75,8 @@ void handle_input(struct ServerState* session) {
 
             fd_controller.add(listener);
             // session->ip = connection.get_listener_ip();
-            session->ip = connection.default_ip;
+            // session->ip = connection.default_ip;
+            strcpy(session->ip, connection.default_ip);
             session->port = port;
             session->listening = 1;
             session->listener_fd = listener;
@@ -119,7 +120,7 @@ void handle_listener(struct ServerState* session) {
 void handle_client_fd(int fd, struct ServerState* session) {
     // connection.receive(fd);
     int ret;
-    char buffer[128] = "original";
+    char buffer[128] = "buffer";
     char payload[128] = "OKLA";
 
     ret = connection.receive(fd, buffer);
