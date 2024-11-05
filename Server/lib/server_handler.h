@@ -4,7 +4,7 @@
 struct ServerState {
     char ip[16];
     int port;
-    int listening;
+    int is_listening;
     int listener_fd;
     int n_clients;
     int can_close_server;

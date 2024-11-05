@@ -50,7 +50,7 @@ static int do_objs(struct Game1Session* session);
 /**
  * The main game method
  */
-void play_game_type_1(char* game_id) {
+void play_game(char* game_id) {
     int ret;
     int can_exit = 0;
 
@@ -211,7 +211,7 @@ static int do_look(struct Game1Session* session, char* arg0) {
     int ret;
     char payload[128] = "";
     char response[128] = "";
-    sprintf(payload, "GMN ISTR %s look %s", session->game_id, arg0);
+    sprintf(payload, "GMN %s look %s", session->game_id, arg0);
 
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
@@ -230,7 +230,7 @@ static int do_take(struct Game1Session* session, char* arg0) {
     int ret;
     char payload[128] = "";
     char response[128] = "";
-    sprintf(payload, "GMN ISTR %s take %s", session->game_id, arg0);
+    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
 
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
@@ -248,7 +248,7 @@ static int do_drop(struct Game1Session* session, char* arg0) {
     int ret;
     char payload[128] = "";
     char response[128] = "";
-    sprintf(payload, "GMN ISTR %s take %s", session->game_id, arg0);
+    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
 
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
@@ -266,7 +266,7 @@ static int do_use(struct Game1Session* session, char* arg0, char* arg1) {
     int ret;
     char payload[128] = "";
     char response[128] = "";
-    sprintf(payload, "GMN ISTR %s take %s", session->game_id, arg0);
+    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
 
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
@@ -284,7 +284,7 @@ static int do_objs(struct Game1Session* session) {
     int ret;
     // char payload[128] = "";
     // char response[128] = "";
-    // sprintf(payload, "GMN ISTR %s take %s", session->game_id, arg0);
+    // sprintf(payload, "GMN %s take %s", session->game_id, arg0);
 
     // ret = connection.request(payload, response, sizeof(response));
     // if (ret == -1) {

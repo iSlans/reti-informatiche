@@ -35,6 +35,7 @@ void game_page(struct Session* session) {
         char arg[16];
         enum UserCommand command = get_game_page_command(arg);
 
+        // TODO dismantle this long switch
         switch (command) {
             case COMMAND_START:
                 ret = do_start(arg);
@@ -72,6 +73,49 @@ void game_page(struct Session* session) {
     } while (!can_exit);
 
     return;
+}
+
+/**
+ *
+ * return -1 if error
+ */
+int do_start(char* arg0) {
+    struct RoomGame* game_list = &available_games[0];
+    int index = get_game_idx_from_id(arg0);
+    if (index == -1) {
+        printf("Selected game room not found!\n");
+        return -1;
+    }
+
+    // game_list[index].play(game_list[index].id);
+    play_game(game_list[index].id);
+
+    // printf("Game start!\n");
+    // getchar();
+    printf("Game end, press any key to return to game list page\n");
+    getchar();
+
+    return 0;
+}
+
+/**
+ * Send Logout request to server
+ */
+int do_logout() {
+    int ret;
+    char payload[16] = "USR LOGOUT";
+    char response[16] = "";
+
+    ret = connection.request(payload, response, sizeof(response));
+    if (ret == -1) {
+        printf("Error on reaching the server, please retry...\n");
+        return -1;
+    }
+
+    if (strcmp(response, "OK") == 0) {
+        return 0;
+    }
+    return -1;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -123,54 +167,13 @@ enum UserCommand get_game_page_command(char* arg0) {
     return command_id;
 }
 
+// TODO remove this func
 int get_game_idx_from_id(char* gameid) {
     int len = len_available_games;
     for (int i = 0; i < len; i++) {
         if (strcmp(available_games[i].id, gameid) == 0) {
             return i;
         }
-    }
-    return -1;
-}
-
-/**
- *
- * return -1 if error
- */
-int do_start(char* arg0) {
-    struct RoomGame* game_list = &available_games[0];
-    int index = get_game_idx_from_id(arg0);
-    if (index == -1) {
-        printf("Selected game room not found!\n");
-        return -1;
-    }
-
-    game_list[index].play(game_list[index].id);
-
-    // printf("Game start!\n");
-    // getchar();
-    printf("Game end, press any key to return to game list page\n");
-    getchar();
-
-    return 0;
-}
-
-/**
- * Send Logout request to server
- */
-int do_logout() {
-    int ret;
-    char payload[16] = "USR LOGOUT";
-    char response[16] = "";
-
-    ret = connection.request(payload, response, sizeof(response));
-    if (ret == -1) {
-        printf("Error on reaching the server, please retry...\n");
-        return -1;
-    }
-
-    if (strcmp(response, "OK") == 0) {
-        return 0;
     }
     return -1;
 }

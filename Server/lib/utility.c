@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static unsigned int parse_uint(char* str);
+// static unsigned int parse_uint(char* str);
 
 /**
  * store in buffer an entire line from stdin until buffer_len or newline
@@ -32,24 +32,24 @@ int parse_port(char* str) {
 }
 
 /* parse unsigned number from string, returns -1 if error */
-static unsigned int parse_uint(char* str) {
-    unsigned int number;
+// static unsigned int parse_uint(char* str) {
+//     unsigned int number;
 
-    int ret = sscanf(str, "%u", &number);
-    if (ret == 0) {
-        return -1;
-    }
+//     int ret = sscanf(str, "%u", &number);
+//     if (ret == 0) {
+//         return -1;
+//     }
 
-    return number;
+//     return number;
 
-    // char* pos;
-    // errno = 0;
-    // number = strtoul(str, pos, 10);
-    // number = strtoul("\n", NULL, 10);
-    // number = strtoul("-111\n", NULL, 10);
-    // number = strtoul("40000000000000000000000000000000000000000000000", NULL, 10);
-    // if (errno != 0) {
-    //     perror("Parse error");
-    //     return -1;
-    // }
-}
+//     // char* pos;
+//     // errno = 0;
+//     // number = strtoul(str, pos, 10);
+//     // number = strtoul("\n", NULL, 10);
+//     // number = strtoul("-111\n", NULL, 10);
+//     // number = strtoul("40000000000000000000000000000000000000000000000", NULL, 10);
+//     // if (errno != 0) {
+//     //     perror("Parse error");
+//     //     return -1;
+//     // }
+// }

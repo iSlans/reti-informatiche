@@ -6,7 +6,7 @@
 struct RoomGame {
     char id[16];              // client side identifier
     char name[16];            //
-    void (*play)(char* arg);  // 'executable' to run the game
+    void (*play)(char* arg);  // 'executable' to run the game TODO remove this
     // unsigned int code;     // server side identifier
     // ...
 };
@@ -14,9 +14,6 @@ struct RoomGame {
 extern struct RoomGame available_games[];
 extern unsigned int len_available_games;
 
-void play_game_type_1(char* game_id);
-// void play_game_type_2();
-// void play_game_type_3();
-// void play_game_type_4();
+void play_game(char* game_id);
 
 #endif

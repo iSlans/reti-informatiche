@@ -9,7 +9,7 @@ int main() {
         .ip = NULL,
         .port = 0,
         .can_close_server = 0,
-        .listening = 0,
+        .is_listening = 0,
         .listener_fd = -1,
         .n_clients = 0,
     };

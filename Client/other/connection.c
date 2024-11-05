@@ -72,7 +72,8 @@ static int close_connection() {
 }
 
 /**
- * aaa
+ * Send a message to server and get a response
+ * returns -1 if any error, e.g. connection unexpectedly closed
  */
 static int request(char* payload, char* response, unsigned int resp_len) {
     int ret;
@@ -113,8 +114,8 @@ static int request(char* payload, char* response, unsigned int resp_len) {
     if (ret == -1) {
         perror("Error sending payload len");
         // if(errno == ECONNRESET){}
-        printf("Closed connection with server, please close and restart the client ");
-        conn_is_open = 0;
+        // printf("Closed connection with server, please close and restart the client ");
+        // conn_is_open = 0;
         return -1;
     }
     if (ret < sizeof(uint16_t)) {
