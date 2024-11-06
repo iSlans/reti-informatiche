@@ -110,7 +110,7 @@ static int request(char* payload, char* response, unsigned int resp_len) {
 
     msg_len = htons(payload_len);
 
-    ret = send(conn_socket, &msg_len, sizeof(uint16_t), 0);
+    ret = send(conn_socket, &msg_len, sizeof(uint16_t), MSG_NOSIGNAL);
     if (ret == -1) {
         perror("Error sending payload len");
         // if(errno == ECONNRESET){}
@@ -123,7 +123,7 @@ static int request(char* payload, char* response, unsigned int resp_len) {
         return -1;
     }
 
-    ret = send(conn_socket, payload, payload_len, 0);
+    ret = send(conn_socket, payload, payload_len, MSG_NOSIGNAL);  // may give SIGPIPE if connection gets closed
     if (ret == -1) {
         perror("Error sending payload");
         return -1;
@@ -135,8 +135,9 @@ static int request(char* payload, char* response, unsigned int resp_len) {
     char buffer[MAX_RESPONSE_SIZE];
 
     ret = recv(conn_socket, &msg_len, sizeof(uint16_t), 0);
-    if (ret == -1) {
+    if (ret == -1 || ret == 0) {
         perror("Error receiving response len");
+        close(conn_socket);
         return -1;
     }
 

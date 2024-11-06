@@ -1,6 +1,7 @@
 #include "login_page.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "connection.h"
@@ -29,14 +30,15 @@ void login_page(struct Session* session) {
         switch (command) {
             case COMMAND_LOGIN:
                 ret = do_login();
-                if (ret == -1) continue;
-                session->logged = 1;
+                if (ret == -1) exit(-1);
+                if (ret == 1) session->logged = 1;
                 break;
 
             case COMMAND_SIGNUP:
                 ret = do_signup();
-                if (ret == -1) continue;
-                session->logged = 1;
+                if (ret == -1) exit(-1);
+                if (ret == 1) session->logged = 1;
+                // session->logged = 1;
                 break;
 
             case COMMAND_END:
@@ -129,14 +131,19 @@ int do_login() {
     sprintf(payload, "USR LOGIN %s %s", user, pass);
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
-        printf("Error on reaching the server, please retry...\n");
+        printf("Error on reaching the server...\n");
         return -1;
     }
 
     if (strcmp(response, "OK") == 0) {
+        return 1;
+    }
+    if (strcmp(response, "NK") == 0) {
+        printf("Wrong credentials!\n");
         return 0;
     }
 
+    printf("Unexpected response from server %s\n", response);
     return -1;
 }
 
@@ -163,18 +170,17 @@ int do_signup() {
     } while (!valid);
 
     /* hash(pass); */
-
-    return 0;
+    // return 0;
 
     sprintf(payload, "USR SIGNUP %s %s", user, pass);
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
-        printf("Error on reaching the server, please retry...\n");
+        printf("Error on reaching the server, try close and restart application...\n");
         return -1;
     }
 
     if (strcmp(response, "OK") == 0) {
-        return 0;
+        return 1;
     }
 
     return -1;

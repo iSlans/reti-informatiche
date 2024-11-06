@@ -14,4 +14,17 @@ void handle_input(struct ServerState*);
 void handle_listener(struct ServerState*);
 void handle_client_fd(int fd, struct ServerState*);
 
+enum Command {
+    COMMAND_START,
+    COMMAND_STOP,
+    COMMAND_EMPTY,
+    // COMMAND_CLOSE,
+};
+
+enum ClientCommand {
+    CLIENT_USR,
+    CLIENT_GMN,
+    CLIENT_INVALID
+};
+
 #endif

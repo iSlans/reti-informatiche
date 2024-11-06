@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+// #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
+#define TIME_FORMAT "%H:%M:%S"
+
 #define RED(str) "\x1b[31m" str "\x1b[0m"
 #define GREEN(str) "\x1b[32m" str "\x1b[0m"
 #define YELLOW(str) "\x1b[33m" str "\x1b[0m"
@@ -22,7 +25,7 @@ void logging(const char* level, const char* msg, va_list args) {
     char timestamp[30];
     time_t now;
     time(&now);
-    strftime(timestamp, sizeof timestamp, "%Y-%m-%d %H:%M:%S", localtime(&now));
+    strftime(timestamp, sizeof timestamp, TIME_FORMAT, localtime(&now));
 
     printf(GRAY("%s") " [%s]: ", timestamp, level);
     vprintf(msg, args);

@@ -70,7 +70,7 @@ static int listener_accept(/*client_addr*/) {
         return -1;
     }
 
-    logging_info("Accepted new connection from %s %u", inet_ntoa(client.sin_addr), client.sin_port);
+    logging_info("Accepted new connection %d from %s:%u", fd, inet_ntoa(client.sin_addr), client.sin_port);
 
     return fd;
 }

@@ -6,7 +6,7 @@
 
 int main() {
     struct ServerState session = {
-        .ip = NULL,
+        // .ip = NULL,
         .port = 0,
         .can_close_server = 0,
         .is_listening = 0,

@@ -16,13 +16,18 @@ const int SERVER_PORT = 4242;
 int main() {
     int ret;
     struct Session session = {
-        .logged = 1,
+        .logged = 0,
         .close_client = 0,
     };
 
+    printf("Press any key to start and connect to server...\n");
+    getchar();
+
     ret = connection.connect(SERVER_IP, SERVER_PORT);
     if (ret == -1) {
-        printf("Could not connect to server...\n");
+        printf(
+            "Could not connect to server...\n"
+            "Closing app...\n");
         exit(-1);
     }
 
