@@ -19,33 +19,33 @@
 #include "message.h"
 #include "utility.h"
 
-struct Game1Session {
+struct GameSession {
     char* game_id;
     int status;
     time_t end_time;
-    unsigned int bag;
+    unsigned int bag_quantity;
     unsigned int bag_size;
     unsigned int token_list;
     unsigned int token_number;
 };
 
-enum Game1Command {
-    GAME1_COMMAND_LOOK,
-    GAME1_COMMAND_TAKE,
-    GAME1_COMMAND_DROP,
-    GAME1_COMMAND_USE,
-    GAME1_COMMAND_OBJS,
-    GAME1_COMMAND_HELP,
-    GAME1_COMMAND_END,
+enum GameCommand {
+    GAME_COMMAND_LOOK,
+    GAME_COMMAND_TAKE,
+    GAME_COMMAND_DROP,
+    GAME_COMMAND_USE,
+    GAME_COMMAND_OBJS,
+    GAME_COMMAND_HELP,
+    GAME_COMMAND_END,
 };
 
-static enum Game1Command get_command(char* arg0, char* arg1);
-static int do_init_game(struct Game1Session* session);
-static int do_look(struct Game1Session* session, char* arg0);
-static int do_take(struct Game1Session* session, char* arg0);
-static int do_drop(struct Game1Session* session, char* arg0);
-static int do_use(struct Game1Session* session, char* arg0, char* arg1);
-static int do_objs(struct Game1Session* session);
+static enum GameCommand get_command(char* arg0, char* arg1);
+static int do_init_game(struct GameSession* session);
+static int do_look(struct GameSession* session, char* arg0);
+static int do_take(struct GameSession* session, char* arg0);
+static int do_drop(struct GameSession* session, char* arg0);
+static int do_use(struct GameSession* session, char* arg0, char* arg1);
+static int do_objs(struct GameSession* session);
 
 /**
  * The main game method
@@ -64,7 +64,7 @@ void play_game(char* game_id) {
         ">> end                         - exit from this game\n"
         ">> help                        - show this message again\n";
 
-    struct Game1Session game_session = {
+    struct GameSession game_session = {
         .game_id = game_id,
         .status = 0,
     };
@@ -83,41 +83,51 @@ void play_game(char* game_id) {
 
         char arg0[32];
         char arg1[32];
-        enum Game1Command command = get_command(arg0, arg1);
+        enum GameCommand command = get_command(arg0, arg1);
 
         switch (command) {
-            case GAME1_COMMAND_LOOK:
+            case GAME_COMMAND_LOOK:
                 ret = do_look(&game_session, arg0);
-                // if(ret == -1){}
+                if (ret == -1) goto unhandled_error;
                 break;
 
-            case GAME1_COMMAND_TAKE:
-                if (strcmp(arg0, "") == 0) {
-                    printf("Missing <object>, select which object to take, e.g. 'take libro'\n");
-                    continue;
-                }
+            case GAME_COMMAND_TAKE:
+                ret = do_take(&game_session, arg0);
+                if (ret == -1) goto unhandled_error;
                 break;
-            case GAME1_COMMAND_DROP:
+
+            case GAME_COMMAND_DROP:
+                ret = do_drop(&game_session, arg0);
+                if (ret == -1) goto unhandled_error;
+                break;
+
                 if (strcmp(arg0, "") == 0) {
                     printf("Missing <object>, select which object to drop, e.g. 'drop libro'\n");
                     continue;
                 }
                 break;
-            case GAME1_COMMAND_USE:
+
+            case GAME_COMMAND_USE:
+                ret = do_use(&game_session, arg0, arg1);
+                if (ret == -1) goto unhandled_error;
+                break;
+
                 if (strcmp(arg0, "") == 0) {
                     printf("Missing <object>, select which object to drop, e.g. 'use libro'\n");
                     continue;
                 }
                 break;
-            case GAME1_COMMAND_OBJS:
+            case GAME_COMMAND_OBJS:
+                ret = do_objs(&game_session);
+                if (ret == -1) goto unhandled_error;
                 break;
 
-            case GAME1_COMMAND_END:
+            case GAME_COMMAND_END:
                 can_exit = 1;
                 print_state = 0;
                 break;
 
-            case GAME1_COMMAND_HELP:
+            case GAME_COMMAND_HELP:
                 print_state = 0;
                 printf("\n%s\n", msg_command_list);
                 break;
@@ -139,6 +149,8 @@ void play_game(char* game_id) {
     } while (!can_exit);
 
     return;
+unhandled_error:
+    printf("Error unhandled error, ending game... \n");
 }
 
 /**
@@ -148,23 +160,23 @@ void play_game(char* game_id) {
  *
  * TODO: could generalize with other get_command functions
  */
-static enum Game1Command get_command(char* arg0, char* arg1) {
-    enum Game1Command command_id;
+static enum GameCommand get_command(char* arg0, char* arg1) {
+    enum GameCommand command_id;
     int valid = 0;
 
     struct CommandDict {
         char* input_str;
-        enum Game1Command command_id;
+        enum GameCommand command_id;
     };
 
     static struct CommandDict command_list[] = {
-        {.input_str = "look", .command_id = GAME1_COMMAND_LOOK},
-        {.input_str = "take", .command_id = GAME1_COMMAND_TAKE},
-        {.input_str = "drop", .command_id = GAME1_COMMAND_DROP},
-        {.input_str = "use", .command_id = GAME1_COMMAND_USE},
-        {.input_str = "objs", .command_id = GAME1_COMMAND_OBJS},
-        {.input_str = "end", .command_id = GAME1_COMMAND_END},
-        {.input_str = "help", .command_id = GAME1_COMMAND_HELP},
+        {.input_str = "look", .command_id = GAME_COMMAND_LOOK},
+        {.input_str = "take", .command_id = GAME_COMMAND_TAKE},
+        {.input_str = "drop", .command_id = GAME_COMMAND_DROP},
+        {.input_str = "use", .command_id = GAME_COMMAND_USE},
+        {.input_str = "objs", .command_id = GAME_COMMAND_OBJS},
+        {.input_str = "end", .command_id = GAME_COMMAND_END},
+        {.input_str = "help", .command_id = GAME_COMMAND_HELP},
     };
 
     do {
@@ -203,14 +215,52 @@ static enum Game1Command get_command(char* arg0, char* arg1) {
     return command_id;
 }
 
-static int do_init_game(struct Game1Session* session) {
-    return -1;
-}
-
-static int do_look(struct Game1Session* session, char* arg0) {
+static int do_init_game(struct GameSession* session) {
     int ret;
     char payload[128] = "";
     char response[128] = "";
+
+    sprintf(payload, "GMN %s init", session->game_id);
+    ret = connection.request(payload, response, sizeof(response));
+    if (ret == -1) {
+        printf("Error on reaching the server, please retry...\n");
+        return -1;
+    }
+
+    // printf("%s\n", response);
+    if (strncmp(response, "OK", 2) != 0) {
+        return -1;
+    }
+
+    struct ServerResponse {
+        int status;
+        unsigned int bag_quantity;
+        unsigned int bag_size;
+        char end_time[16];
+    };
+    struct ServerResponse resp;
+
+    sscanf(response, "OK %d %u %u %s",
+           &resp.status,
+           &resp.bag_quantity,
+           &resp.bag_size,
+           &resp.end_time);
+
+    struct tm tm;
+    strptime("%F %T", &resp.end_time, &tm);
+
+    session->status = resp.status;
+    session->bag_quantity = resp.bag_quantity;
+    session->bag_size = resp.bag_size;
+    session->end_time = mktime(&tm);
+
+    return 0;
+}
+
+static int do_look(struct GameSession* session, char* arg0) {
+    int ret;
+    char payload[128] = "";
+    char response[512] = "";
     sprintf(payload, "GMN %s look %s", session->game_id, arg0);
 
     ret = connection.request(payload, response, sizeof(response));
@@ -219,14 +269,80 @@ static int do_look(struct Game1Session* session, char* arg0) {
         return -1;
     }
 
-    printf("%s\n", response);
+    if (strncmp(response, "OK", 2) != 0) {
+        return -1;
+    }
 
-    // update session
+    // printf("%s\n", response);
+
+    struct ServerResponse {
+        char message[512];
+    };
+    struct ServerResponse resp;
+
+    sscanf(response, "OK %511[^\\0]",
+           &resp.message);
+
+    printf("%s", message);
 
     return 0;
 }
 
-static int do_take(struct Game1Session* session, char* arg0) {
+static int do_take(struct GameSession* session, char* arg0) {
+    if (strcmp(arg0, "") == 0) {
+        printf("Missing <object>, select which object to take, e.g. 'take libro'\n");
+        return 0;
+    }
+
+    int ret;
+    char payload[128] = "";
+    char response[128] = "";
+    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
+
+    ret = connection.request(payload, response, sizeof(response));
+    if (ret == -1) {
+        printf("Error on reaching the server, please retry...\n");
+        return -1;
+    }
+
+    printf("%s\n", response);
+
+    if (strncmp(response, "OK", 2) != 0) {
+        return -1;
+    }
+
+    // update session data
+    session->bag_quantity++;
+
+    return 0;
+}
+static int do_drop(struct GameSession* session, char* arg0) {
+    int ret;
+    char payload[128] = "";
+    char response[128] = "";
+    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
+
+    ret = connection.request(payload, response, sizeof(response));
+    if (ret == -1) {
+        printf("Error on reaching the server, please retry...\n");
+        return -1;
+    }
+
+    // printf("%s\n", response);
+
+    struct ServerResponse {
+        char message[256];
+    };
+    struct ServerResponse resp;
+
+    sscanf(response, "OK %s",
+           &resp.message);
+
+    // update session data
+
+    return 0;
+}
+static int do_use(struct GameSession* session, char* arg0, char* arg1) {
     int ret;
     char payload[128] = "";
     char response[128] = "";
@@ -244,43 +360,7 @@ static int do_take(struct Game1Session* session, char* arg0) {
 
     return 0;
 }
-static int do_drop(struct Game1Session* session, char* arg0) {
-    int ret;
-    char payload[128] = "";
-    char response[128] = "";
-    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
-
-    ret = connection.request(payload, response, sizeof(response));
-    if (ret == -1) {
-        printf("Error on reaching the server, please retry...\n");
-        return -1;
-    }
-
-    printf("%s\n", response);
-
-    // update session
-
-    return 0;
-}
-static int do_use(struct Game1Session* session, char* arg0, char* arg1) {
-    int ret;
-    char payload[128] = "";
-    char response[128] = "";
-    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
-
-    ret = connection.request(payload, response, sizeof(response));
-    if (ret == -1) {
-        printf("Error on reaching the server, please retry...\n");
-        return -1;
-    }
-
-    printf("%s\n", response);
-
-    // update session
-
-    return 0;
-}
-static int do_objs(struct Game1Session* session) {
+static int do_objs(struct GameSession* session) {
     int ret;
     // char payload[128] = "";
     // char response[128] = "";

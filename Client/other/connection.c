@@ -9,8 +9,8 @@
 #define MOCK 0
 #define MOCK_RESPONSE "OK"
 
-#define MAX_PAYLOAD_SIZE 128
-#define MAX_RESPONSE_SIZE 128
+#define MAX_PAYLOAD_SIZE 1024
+#define MAX_RESPONSE_SIZE 1024
 
 // Could try make a struct member to contains these info,
 // so would not limited to only one instance
@@ -152,7 +152,11 @@ static int request(char* payload, char* response, unsigned int resp_len) {
         return -1;
     }
 
-    strcpy(response, buffer);
+    if (len > resp_len) {
+        printf("Response buffer too small, will truncate message\n");
+    }
+    strncpy(response, buffer, resp_len);
+    response[resp_len - 1] = '\0';
 
     return 0;
 }
