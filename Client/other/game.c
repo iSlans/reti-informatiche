@@ -22,11 +22,15 @@
 struct GameSession {
     char* game_id;
     int status;
+    int phase;
+
     time_t end_time;
     unsigned int bag_quantity;
     unsigned int bag_size;
-    unsigned int token_list;
-    unsigned int token_number;
+
+    // char token_list[256];
+    unsigned int token_earned;
+    unsigned int token_left;
 };
 
 enum GameCommand {
@@ -39,6 +43,14 @@ enum GameCommand {
     GAME_COMMAND_END,
 };
 
+enum GameStatus {
+    GAME_STATUS_NOT_STARTED = 0,
+    GAME_STATUS_PLAYING = 100,
+    GAME_STATUS_WIN = 200,
+    GAME_STATUS_LOSE = 300,
+    GAME_STATUS_TIMEOUT = 301,
+};
+
 static enum GameCommand get_command(char* arg0, char* arg1);
 static int do_init_game(struct GameSession* session);
 static int do_look(struct GameSession* session, char* arg0);
@@ -46,6 +58,7 @@ static int do_take(struct GameSession* session, char* arg0);
 static int do_drop(struct GameSession* session, char* arg0);
 static int do_use(struct GameSession* session, char* arg0, char* arg1);
 static int do_objs(struct GameSession* session);
+static int do_get_game_status(struct GameSession* session);
 
 /**
  * The main game method
@@ -76,7 +89,12 @@ void play_game(char* game_id) {
         return;
     }
 
-    printf("%s\n", msg_command_list);
+    if (game_session.status != GAME_STATUS_PLAYING) {
+        printf("Game status not correctly set, returning to game list page...\n");
+        return;
+    }
+
+    printf("\n%s\n", msg_command_list);
 
     do {
         int print_state = 1;
@@ -101,22 +119,11 @@ void play_game(char* game_id) {
                 if (ret == -1) goto unhandled_error;
                 break;
 
-                if (strcmp(arg0, "") == 0) {
-                    printf("Missing <object>, select which object to drop, e.g. 'drop libro'\n");
-                    continue;
-                }
-                break;
-
             case GAME_COMMAND_USE:
                 ret = do_use(&game_session, arg0, arg1);
                 if (ret == -1) goto unhandled_error;
                 break;
 
-                if (strcmp(arg0, "") == 0) {
-                    printf("Missing <object>, select which object to drop, e.g. 'use libro'\n");
-                    continue;
-                }
-                break;
             case GAME_COMMAND_OBJS:
                 ret = do_objs(&game_session);
                 if (ret == -1) goto unhandled_error;
@@ -124,11 +131,11 @@ void play_game(char* game_id) {
 
             case GAME_COMMAND_END:
                 can_exit = 1;
-                print_state = 0;
+                // print_state = 0;
                 break;
 
             case GAME_COMMAND_HELP:
-                print_state = 0;
+                // print_state = 0;
                 printf("\n%s\n", msg_command_list);
                 break;
 
@@ -136,19 +143,52 @@ void play_game(char* game_id) {
         }
 
         // check status win/lose
-
-        if (print_state) {
-            printf(
-                "Token Collected: 1\t"
-                "Remainant: 5\t"
-                "Time left: 59min 10s\n"
-                //
-            );
+        ret = do_get_game_status(&game_session);
+        if (ret == -1) {
+            printf("Could not fetch game status, returning to game list page...\n");
+            return;
         }
 
-    } while (!can_exit);
+        switch (game_session.status) {
+            case GAME_STATUS_WIN:
+                printf("You Won!\n");
+                can_exit = 1;
+                break;
 
+            case GAME_STATUS_LOSE:
+                printf("You Lost :c\n");
+                can_exit = 1;
+                break;
+
+            case GAME_STATUS_TIMEOUT:
+                printf("Game Timeout, you lost :c\n");
+                can_exit = 1;
+                break;
+            default:
+                break;
+        }
+
+        if (print_state) {
+            time_t diff = game_session.end_time - time(NULL);
+            if (diff < 0) diff = 0;
+            struct tm* time_data;
+            time_data = gmtime(&diff);
+
+            printf(
+                "\n"
+                "Token Collected: %u\t"
+                "Remaining: %u\t"
+                "Time left: %dm %ds\n\n",
+                game_session.token_earned,
+                game_session.token_left,
+                time_data->tm_min,
+                time_data->tm_sec);
+        }
+
+        // unhandled_error:
+    } while (!can_exit);
     return;
+
 unhandled_error:
     printf("Error unhandled error, ending game... \n");
 }
@@ -156,7 +196,7 @@ unhandled_error:
 /**
  * Ask user input until getting a valid command
  * command parameters stored in arg0 arg1
- * no checks perfomed on parameters
+ * no checks performed on parameters
  *
  * TODO: could generalize with other get_command functions
  */
@@ -220,7 +260,7 @@ static int do_init_game(struct GameSession* session) {
     char payload[128] = "";
     char response[128] = "";
 
-    sprintf(payload, "GMN %s init", session->game_id);
+    sprintf(payload, "GMN init %s", session->game_id);
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
         printf("Error on reaching the server, please retry...\n");
@@ -234,25 +274,31 @@ static int do_init_game(struct GameSession* session) {
 
     struct ServerResponse {
         int status;
-        unsigned int bag_quantity;
-        unsigned int bag_size;
-        char end_time[16];
+        int phase;
+        unsigned long end_time;
+        unsigned int token_earned;
+        unsigned int token_total;
     };
     struct ServerResponse resp;
 
-    sscanf(response, "OK %d %u %u %s",
+    sscanf(response,
+           "OK "
+           "status=%d"
+           "phase=%d"
+           "end=%lu"
+           "token=%d"
+           "token_total=%d",
            &resp.status,
-           &resp.bag_quantity,
-           &resp.bag_size,
-           &resp.end_time);
-
-    struct tm tm;
-    strptime("%F %T", &resp.end_time, &tm);
+           &resp.phase,
+           &resp.end_time,
+           &resp.token_earned,
+           &resp.token_total);
 
     session->status = resp.status;
-    session->bag_quantity = resp.bag_quantity;
-    session->bag_size = resp.bag_size;
-    session->end_time = mktime(&tm);
+    session->phase = resp.phase;
+    session->end_time = resp.end_time;
+    session->token_earned = resp.token_earned;
+    session->token_left = resp.token_total - resp.token_earned;
 
     return 0;
 }
@@ -261,7 +307,7 @@ static int do_look(struct GameSession* session, char* arg0) {
     int ret;
     char payload[128] = "";
     char response[512] = "";
-    sprintf(payload, "GMN %s look %s", session->game_id, arg0);
+    sprintf(payload, "GMN look %s", arg0);
 
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
@@ -280,10 +326,9 @@ static int do_look(struct GameSession* session, char* arg0) {
     };
     struct ServerResponse resp;
 
-    sscanf(response, "OK %511[^\\0]",
-           &resp.message);
+    sscanf(response, "OK %511[^\\0]", resp.message);
 
-    printf("%s", message);
+    printf("%s\n", resp.message);
 
     return 0;
 }
@@ -295,9 +340,9 @@ static int do_take(struct GameSession* session, char* arg0) {
     }
 
     int ret;
-    char payload[128] = "";
-    char response[128] = "";
-    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
+    char payload[512] = "";
+    char response[512] = "";
+    sprintf(payload, "GMN take %s", arg0);
 
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
@@ -305,22 +350,48 @@ static int do_take(struct GameSession* session, char* arg0) {
         return -1;
     }
 
-    printf("%s\n", response);
+    // printf("%s\n", response);
 
     if (strncmp(response, "OK", 2) != 0) {
         return -1;
     }
 
-    // update session data
-    session->bag_quantity++;
+    struct ServerResponse {
+        char message[1024];
+        // char enigma[512];
+        // char solution[512];
+    };
+    struct ServerResponse resp;
+
+    if (strncmp(response, "OK ENIGMA", 9) == 0) {
+        sscanf(response, "OK ENIGMA %1023[^\\0]", resp.message);
+        printf("%s\n", resp.message);
+
+        // Get and send solution here
+        char solution[32] = "";
+        get_input_line(solution, sizeof solution);
+
+        sprintf(payload, "GMN take %s SOLUTION %s", arg0, solution);
+        ret = connection.request(payload, response, sizeof(response));
+
+        if (strncmp(response, "OK", 2) != 0) {
+            return -1;
+        }
+    }
+    sscanf(response, "OK %511[^\\0]", resp.message);
+    printf("%s\n", resp.message);
 
     return 0;
 }
 static int do_drop(struct GameSession* session, char* arg0) {
+    if (strcmp(arg0, "") == 0) {
+        printf("Missing <object>, select which object to drop, e.g. 'drop libro'\n");
+        return 0;
+    }
     int ret;
     char payload[128] = "";
     char response[128] = "";
-    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
+    sprintf(payload, "GMN drop %s", arg0);
 
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
@@ -331,22 +402,28 @@ static int do_drop(struct GameSession* session, char* arg0) {
     // printf("%s\n", response);
 
     struct ServerResponse {
-        char message[256];
+        char message[512];
     };
     struct ServerResponse resp;
 
-    sscanf(response, "OK %s",
-           &resp.message);
-
-    // update session data
+    sscanf(response, "OK %511[^\\0]", resp.message);
+    printf("%s\n", resp.message);
 
     return 0;
 }
 static int do_use(struct GameSession* session, char* arg0, char* arg1) {
+    if (strcmp(arg0, "") == 0) {
+        printf("Missing <object>, select which object to use, e.g. 'use libro'\n");
+        return 0;
+    }
     int ret;
-    char payload[128] = "";
-    char response[128] = "";
-    sprintf(payload, "GMN %s take %s", session->game_id, arg0);
+    char payload[512] = "";
+    char response[512] = "";
+    sprintf(payload, "GMN use %s %s", arg0, arg1);
+
+    if (strcmp(arg1, "") == 0) {
+        sprintf(payload, "GMN use %s", arg0);
+    }
 
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
@@ -354,7 +431,15 @@ static int do_use(struct GameSession* session, char* arg0, char* arg1) {
         return -1;
     }
 
-    printf("%s\n", response);
+    // printf("%s\n", response);
+
+    struct ServerResponse {
+        char message[512];
+    };
+    struct ServerResponse resp;
+
+    sscanf(response, "OK %511[^\\0]", resp.message);
+    printf("%s\n", resp.message);
 
     // update session
 
@@ -362,21 +447,58 @@ static int do_use(struct GameSession* session, char* arg0, char* arg1) {
 }
 static int do_objs(struct GameSession* session) {
     int ret;
-    // char payload[128] = "";
-    // char response[128] = "";
-    // sprintf(payload, "GMN %s take %s", session->game_id, arg0);
+    char payload[128] = "";
+    char response[128] = "";
+    sprintf(payload, "GMN objs");
 
-    // ret = connection.request(payload, response, sizeof(response));
-    // if (ret == -1) {
-    //     printf("Error on reaching the server, please retry...\n");
-    //     return -1;
-    // }
+    ret = connection.request(payload, response, sizeof(response));
+    if (ret == -1) {
+        printf("Error on reaching the server, please retry...\n");
+        return -1;
+    }
+    printf("%s\n", response);
+    return 0;
+}
 
-    // printf("%s\n", response);
+static int do_get_game_status(struct GameSession* session) {
+    int ret;
+    char payload[128] = "";
+    char response[128] = "";
+    sprintf(payload, "GMN status");
 
-    session;
+    ret = connection.request(payload, response, sizeof(response));
+    if (ret == -1) {
+        printf("Error on reaching the server, please retry...\n");
+        return -1;
+    }
 
-    // update session
+    struct ServerResponse {
+        int status;
+        int phase;
+        unsigned long end_time;
+        unsigned int token_earned;
+        unsigned int token_total;
+    };
+    struct ServerResponse resp;
+
+    sscanf(response,
+           "OK "
+           "status=%d"
+           "phase=%d"
+           "end=%lu"
+           "token=%d"
+           "token_total=%d",
+           &resp.status,
+           &resp.phase,
+           &resp.end_time,
+           &resp.token_earned,
+           &resp.token_total);
+
+    session->status = resp.status;
+    session->phase = resp.phase;
+    session->end_time = resp.end_time;
+    session->token_earned = resp.token_earned;
+    session->token_left = resp.token_total - resp.token_earned;
 
     return 0;
 }

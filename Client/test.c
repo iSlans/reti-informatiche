@@ -7,18 +7,34 @@
 #include "other/login_page.h"
 #include "other/message.h"
 #include "other/utility.h"
+#include "time.h"
 
 int logged = 0;
 int close_client = 0;
 int main() {
+    time_t diff = -10;
+
+    // if (diff < 0) diff = 0;
+
+    struct tm* ptm;
+    ptm = gmtime(&diff);
+    printf("%dmin %dsec", ptm->tm_min, ptm->tm_sec);
+
+    printf(asctime(ptm));
+
+    return 0;
     connection.connect("127.0.0.1", 4242);
 
     int sd = connection.get_socket();
 
-    char payload[128] = "OH YEAH";
-    char response[128] = "";
+    char payload[1024] = "";
+    char response[1024] = "";
 
-    connection.request(payload, response, sizeof(response));
+    while (1) {
+        get_input_line(payload, sizeof payload);
+        connection.request(payload, response, sizeof(response));
+        printf("%s\n", response);
+    }
 
     return 0;
 }

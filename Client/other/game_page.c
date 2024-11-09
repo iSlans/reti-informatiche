@@ -113,6 +113,7 @@ int do_logout() {
     }
 
     if (strcmp(response, "OK") == 0) {
+        printf("Logged out!\n\n");
         return 0;
     }
     return -1;

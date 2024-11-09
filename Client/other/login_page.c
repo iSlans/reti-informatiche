@@ -136,6 +136,7 @@ int do_login() {
     }
 
     if (strcmp(response, "OK") == 0) {
+        printf("Logged in!\n\n");
         return 1;
     }
     if (strcmp(response, "NK") == 0) {

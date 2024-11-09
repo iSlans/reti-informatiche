@@ -6,6 +6,33 @@
 #include <string.h>
 #include <sys/queue.h>
 
+#define MAX_SERIALIZED_LEN 1024
+
+char* serialize_game_data(struct GameData* game) {
+    char* data_string = calloc(MAX_SERIALIZED_LEN, sizeof(char));
+
+    snprintf(data_string, MAX_SERIALIZED_LEN,
+             //  "OK "
+             "status=%d"
+             "phase=%d"
+             "end=%lu"
+             "token=%d"
+             "token_total=%d",
+             game->status,
+             game->phase,
+             game->end_time,
+             game->token_earned,
+             game->token_total  //
+    );
+
+    // NEED TO DO free FROM CALLER
+    return data_string;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 CLIENT LIST                                */
+/* -------------------------------------------------------------------------- */
+
 typedef struct FDClientDict {
     int fd;
     struct ClientState* client;
@@ -23,6 +50,7 @@ static void my_list_init() {
 static struct ClientState* my_list_insert(int fd) {
     FDClientDict* elem = malloc(sizeof(FDClientDict));
     elem->client = malloc(sizeof(struct ClientState));
+    memset(elem, 0, sizeof elem);
     elem->fd = fd;
     LIST_INSERT_HEAD(&head, elem, entries);
     return elem->client;

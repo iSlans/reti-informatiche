@@ -1,2 +1,3 @@
 user:aa pass:aa
 user:bb pass:bb
+user:mana pass:pass

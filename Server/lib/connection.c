@@ -7,8 +7,8 @@
 
 #include "logging.h"
 
-#define MAX_REQUEST_LEN 128
-#define MAX_RESPONSE_LEN 128
+#define MAX_REQUEST_LEN 1024
+#define MAX_RESPONSE_LEN 1024
 
 #define BACKLOG_SIZE 10
 #define DEFAULT_PORT 4242

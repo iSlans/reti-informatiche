@@ -6,7 +6,9 @@
 #include "client_session.h"
 #include "connection.h"
 #include "fdcontroller.h"
+#include "game1.h"
 #include "logging.h"
+#include "time.h"
 #include "utility.h"
 // #include "other.h"
 
@@ -97,7 +99,7 @@ void handle_listener(struct ServerState* server) {
 void handle_client_fd(int fd, struct ServerState* server) {
     int ret;
     char request[128] = "buffer";
-    char response[128] = "OKLA";
+    // char response[128] = "OKLA";
 
     ret = connection.receive(fd, request);
     if (ret == -1 || ret == 0) goto close_client;
@@ -129,13 +131,35 @@ void handle_client_fd(int fd, struct ServerState* server) {
     }
 
     if (command == CLIENT_GMN) {
+        if (strcmp(type, "init") == 0) {
+            if (strcmp(args, "1") == 0) {
+                client->selected_game = 1;
+            } else {
+                connection.send(fd, "NK");
+                return;
+            }
+        }
+
+        if (client->selected_game == 0) {
+            logging_error("Inconsistent state, client has not started a game yet");
+            // goto close_client;
+            return;
+        }
+
+        if (client->selected_game == 1) {
+            ret = handle_game1(fd, client, type, args);
+            if (ret == -1) goto close_client;
+            return;
+        }
     }
 
-    ret = connection.send(fd, "OK");
-    if (ret == -1) goto close_client;
+    // ret = connection.send(fd, "OK");
+    // if (ret == -1) goto close_client;
 
     return;
+
 close_client:
+    logging_warn("Closing client %d", fd);
     connection.close(fd);
     fd_controller.remove(fd);
     client_list.remove(fd);
@@ -143,6 +167,7 @@ close_client:
 }
 
 /**
+ * handle USR requests: signup login logout
  *
  * returns 1 if operation success
  * returns 0 if login failed
@@ -177,7 +202,7 @@ int handle_user(struct ClientState* client, char* type, char* args) {
             // get_line_from(file, line, sizeof line);
             fgets(line, sizeof line, file);
 
-            sprintf(substring, "user:%s ", username);
+            sprintf(substring, "user:%s pass:", username);
             if (strstr(line, substring)) {
                 logging_info("User already registered");
                 return -1;
