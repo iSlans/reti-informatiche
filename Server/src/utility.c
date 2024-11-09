@@ -16,7 +16,6 @@ void get_input_line(char* buffer, unsigned int buffer_len) {
     }
     buffer[strcspn(buffer, "\n")] = '\0';
 }
-
 /**
  * Parse a port number from str
  * Return -1 if any error or invalid port number

@@ -1,8 +1,8 @@
 #include <unistd.h>
 
-#include "lib/fdcontroller.h"
-#include "lib/logging.h"
-#include "lib/server_handler.h"
+#include "src/fdcontroller.h"
+#include "src/logging.h"
+#include "src/server_handler.h"
 
 int main() {
     struct ServerState session = {

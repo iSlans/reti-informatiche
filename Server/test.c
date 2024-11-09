@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lib/client_session.h"
-#include "lib/logging.h"
+#include "src/client_session.h"
+#include "src/logging.h"
 
 int main(int argc, char **argv) {
     char *command_str = malloc(128);

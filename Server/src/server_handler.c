@@ -15,10 +15,13 @@
 /* ---------------------------- utility functions --------------------------- */
 static int get_command(char* arg0);
 static void parse_request(char* request, int* command, char* type, char* args);
-
 /* ------------------------------------ - ----------------------------------- */
-int handle_user(struct ClientState* client, char* type, char* args);
 
+/**
+ * Handle server stdin inputs, so:
+ * - start
+ * - stop
+ */
 void handle_input(struct ServerState* server) {
     char arg0[16];
     int command_id = get_command(arg0);
@@ -75,6 +78,12 @@ void handle_input(struct ServerState* server) {
     logging_warn("Unknown command");
 }
 
+/**
+ * Handle a new client connection request.
+ *
+ * Adds the new fd to fd_set watch list.
+ * Adds a new <fd,client> tuple in the connected clients list
+ */
 void handle_listener(struct ServerState* server) {
     int newfd = connection.accept();
     if (newfd == -1) {
@@ -96,6 +105,14 @@ void handle_listener(struct ServerState* server) {
         newfd, server->n_clients);
 }
 
+int handle_user(struct ClientState* client, char* type, char* args);
+
+/**
+ * Handle a client request.
+ *
+ *
+ *
+ */
 void handle_client_fd(int fd, struct ServerState* server) {
     int ret;
     char request[128] = "buffer";

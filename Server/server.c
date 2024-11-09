@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "lib/logging.h"
+#include "src/logging.h"
 
 // #define DEFAULT_PORT 4242
 // #define DEFAULT_IP "127.0.0.1"

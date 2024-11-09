@@ -33,12 +33,20 @@ char* serialize_game_data(struct GameData* game) {
 /*                                 CLIENT LIST                                */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Struct to associate the fd to ClientState
+ * Using gcc queue.h to implement a list of this struct, so a list of <fd, clientState>
+ */
 typedef struct FDClientDict {
     int fd;
     struct ClientState* client;
     LIST_ENTRY(FDClientDict)
     entries;
 } FDClientDict;
+
+/**
+ * Below all the methods to add, get, modify, delete elements in the list
+ */
 
 LIST_HEAD(ListHead, FDClientDict);
 struct ListHead head;

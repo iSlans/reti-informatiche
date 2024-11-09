@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "other/connection.h"
-#include "other/game_page.h"
-#include "other/login_page.h"
-#include "other/session.h"
-// #include "other/message.h"
-// #include "other/utility.h"
+#include "src/connection.h"
+#include "src/game_page.h"
+#include "src/login_page.h"
+#include "src/session.h"
+// #include "src/message.h"
+// #include "src/utility.h"
 
 // could try make a config file
 const char* SERVER_IP = "127.0.0.1";
