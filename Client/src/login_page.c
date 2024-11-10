@@ -13,8 +13,13 @@
 // #define PASS_LEN 32
 
 /**
- * show initial screen
- * and manage login commands
+ * Module about Accounting, user can login/signup or enter admin account.
+ *
+ * Display the commands, performs some simple input check and send the request to server
+ * The flow is pretty simple and self-explicative:
+ * 1. read a input
+ * 2. do the relative function
+ * 3. loop until user is logged
  */
 void login_page(struct Session* session) {
     int ret;
@@ -73,6 +78,10 @@ void login_page(struct Session* session) {
     return;
 }
 
+/**
+ * Get the user input from stdin and return the relative command
+ * Loops until getting a valid command
+ */
 enum UserCommand get_login_page_command() {
     enum UserCommand command_id;
     int valid = 0;
@@ -111,7 +120,7 @@ enum UserCommand get_login_page_command() {
 }
 
 /**
- *
+ * Ask username and password and send the login request to server
  * return -1 if error or login unsuccessful
  */
 int do_login() {
@@ -126,6 +135,10 @@ int do_login() {
     char line[128] = "";
     char payload[128];
     char response[128];
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 READ INPUT                                 */
+    /* -------------------------------------------------------------------------- */
 
     do {
         /*
@@ -146,12 +159,20 @@ int do_login() {
 
     /* hash(pass); */
 
+    /* -------------------------------------------------------------------------- */
+    /*                                SEND REQUEST                                */
+    /* -------------------------------------------------------------------------- */
+
     sprintf(payload, "USR LOGIN %s %s", user, pass);
     ret = connection.request(payload, response, sizeof(response));
     if (ret == -1) {
         printf("Error on reaching the server...\n");
         return -1;
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                               PARSE RESPONSE                               */
+    /* -------------------------------------------------------------------------- */
 
     if (strcmp(response, "OK") == 0) {
         printf("Logged in!\n\n");
@@ -166,6 +187,9 @@ int do_login() {
     return -1;
 }
 
+/**
+ * Similar to login, here ask username and password to register a new account
+ */
 int do_signup() {
     int ret;
     int valid = 0;
@@ -205,6 +229,9 @@ int do_signup() {
     return -1;
 }
 
+/**
+ * Same as login, but for admin account
+ */
 int do_admin() {
     int ret;
     int valid = 0;

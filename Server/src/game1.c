@@ -1,4 +1,8 @@
-
+/**
+ * Module about the specific "Elementals" escape room game
+ *
+ * If wanna add a new escape room, would need to implement a game2.c file
+ */
 
 #include "game1.h"
 

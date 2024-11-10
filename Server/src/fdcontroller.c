@@ -3,6 +3,13 @@
 #include <stddef.h>
 #include <sys/select.h>
 
+/**
+ * Module to manage to fd for select()
+ *
+ * It wraps fd_set, fd macros, select
+ * and expose "methods" to use in other code modules
+ */
+
 struct FDControllerData {
     fd_set fd_list;
     fd_set ready_fds;

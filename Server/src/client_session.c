@@ -8,6 +8,9 @@
 
 #define MAX_SERIALIZED_LEN 1024
 
+/**
+ * a custom serializer for GameData struct
+ */
 char* serialize_game_data(struct GameData* game) {
     char* data_string = calloc(MAX_SERIALIZED_LEN, sizeof(char));
 
@@ -32,6 +35,10 @@ char* serialize_game_data(struct GameData* game) {
 /* -------------------------------------------------------------------------- */
 /*                                 CLIENT LIST                                */
 /* -------------------------------------------------------------------------- */
+/**
+ * Implements a list of clients,
+ * exposes usual methods like add, remove, find
+ */
 
 /**
  * Struct to associate the fd to ClientState

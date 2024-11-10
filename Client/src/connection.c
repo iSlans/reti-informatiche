@@ -12,6 +12,12 @@
 #define MAX_PAYLOAD_SIZE 1024
 #define MAX_RESPONSE_SIZE 1024
 
+/**
+ * Module for connection to server and data transmission
+ *
+ * It wraps the socket, send, recv.. functions and exposes "methods" to call
+ */
+
 // Could try make a struct member to contains these info,
 // so would not limited to only one instance
 /*limit scope*/
@@ -100,11 +106,14 @@ static int request(char* payload, char* response, unsigned int resp_len) {
         return 0;
     }
 
-    // TODO
-    // exchange sizes
-    // send(len)
-    // recv(max_server_len)
-    // if (max_server_len < len) ...
+    /* -------------------------------------------------------------------------- */
+    /*                                SEND PAYLOAD                                */
+    /* -------------------------------------------------------------------------- */
+    /**
+     * Sending payload takes two send():
+     * 1. the first to send the size of message, using binary data protocol
+     * 2. the second to send the message, using text data protocol
+     */
 
     uint16_t msg_len;
 
@@ -131,6 +140,15 @@ static int request(char* payload, char* response, unsigned int resp_len) {
     if (ret < payload_len) {
         return -1;
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                              RECEIVE RESPONSE                              */
+    /* -------------------------------------------------------------------------- */
+    /**
+     * Here also takes two steps with two recv():
+     * 1. the first to recv the size of message, using binary data protocol
+     * 2. the second to recv the message, using text data protocol
+     */
 
     char buffer[MAX_RESPONSE_SIZE];
 

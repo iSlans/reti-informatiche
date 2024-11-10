@@ -33,6 +33,11 @@ int main() {
         exit(-1);
     }
 
+    // client will loop until user close it with a command
+    // Manage login first
+    // if the user is an admin, show then the admin panel
+    // otherwise just the normal game page
+
     do {
         if (!session.logged) {
             login_page(&session);

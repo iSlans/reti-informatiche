@@ -12,15 +12,21 @@
 #include "utility.h"
 // #include "other.h"
 
+/* -------------------------------------------------------------------------- */
+/*                              SERVER FUNCTIONS                              */
+/* -------------------------------------------------------------------------- */
+
 /* ---------------------------- utility functions --------------------------- */
 static int get_command(char* arg0);
 static void parse_request(char* request, int* command, char* type, char* args);
 /* ------------------------------------ - ----------------------------------- */
 
 /**
- * Handle server stdin inputs, so:
- * - start
- * - stop
+ * Handle server stdin inputs: start and stop
+ *
+ * Flow:
+ * 1. get the command
+ * 2. execute it
  */
 void handle_input(struct ServerState* server) {
     char arg0[16];
@@ -36,6 +42,7 @@ void handle_input(struct ServerState* server) {
             return;
         }
 
+        // user could input also a custom port "start 1234" instead of using the default one
         const char* ip = connection.default_ip;
         int port = parse_port(arg0);
 
@@ -43,6 +50,10 @@ void handle_input(struct ServerState* server) {
             port = connection.default_port;
             logging_warn("Invalid or no port input found, using default port...");
         }
+
+        /* -------------------------------------------------------------------------- */
+        /*                           START SERVER LISTENING                           */
+        /* -------------------------------------------------------------------------- */
 
         int listener = connection.listen(ip, port);
         if (listener == -1) {
@@ -62,6 +73,9 @@ void handle_input(struct ServerState* server) {
     }
 
     if (command_id == COMMAND_STOP) {
+        /* -------------------------------------------------------------------------- */
+        /*                                 STOP SERVER                                */
+        /* -------------------------------------------------------------------------- */
         if (server->n_clients > 0) {
             logging_warn("Can't close server, still have %d active connection", server->n_clients);
             return;
@@ -78,6 +92,9 @@ void handle_input(struct ServerState* server) {
     logging_warn("Unknown command");
 }
 
+/* -------------------------------------------------------------------------- */
+/*                           ACCEPTING A NEW CLIENT                           */
+/* -------------------------------------------------------------------------- */
 /**
  * Handle a new client connection request.
  *
@@ -91,6 +108,7 @@ void handle_listener(struct ServerState* server) {
         return;
     }
 
+    // add client to fd select() watch list
     fd_controller.add(newfd);
     server->n_clients++;
 
@@ -108,16 +126,25 @@ void handle_listener(struct ServerState* server) {
 int handle_user(struct ClientState* client, char* type, char* args);
 int handle_admin(int fd, struct ClientState* client, char* type, char* args);
 
+/* -------------------------------------------------------------------------- */
+/*                            HANDLE CLIENT REQUEST                           */
+/* -------------------------------------------------------------------------- */
 /**
  * Handle a client request.
- *
- *
+ * flow:
+ * 1. parse command
+ * 2. execute it
+ * 3. send a response to client
  *
  */
 void handle_client_fd(int fd, struct ServerState* server) {
     int ret;
     char request[128] = "buffer";
     // char response[128] = "OKLA";
+
+    /* -------------------------------------------------------------------------- */
+    /*                          RECEIVE AND PARSE MESSAGE                         */
+    /* -------------------------------------------------------------------------- */
 
     ret = connection.receive(fd, request);
     if (ret == -1 || ret == 0) goto close_client;
@@ -128,12 +155,17 @@ void handle_client_fd(int fd, struct ServerState* server) {
     char args[256] = "";
     parse_request(request, &command, type, args);
 
+    // note: a normal user from application can't send a invalid request
     if (command == CLIENT_INVALID) {
         logging_warn("Client sent an invalid request: %s", request);
         ret = connection.send(fd, "400");
         if (ret == -1) goto close_client;
         return;
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             EXECUTE THE REQUEST                            */
+    /* -------------------------------------------------------------------------- */
 
     struct ClientState* client = client_list.find(fd);
     if (client == NULL) goto close_client;
@@ -189,6 +221,9 @@ close_client:
     server->n_clients--;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                              HANDLE ACCOUNTING                             */
+/* -------------------------------------------------------------------------- */
 /**
  * handle USR requests: signup login logout
  *
@@ -286,6 +321,10 @@ int handle_user(struct ClientState* client, char* type, char* args) {
     logging_error("Unknown user request type: %s", type);
     return -1;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                            HANDLE ADMIN REQUESTS                           */
+/* -------------------------------------------------------------------------- */
 
 int handle_admin(int fd, struct ClientState* client, char* type, char* args) {
     if (strcmp(type, "LOGIN") == 0) {

@@ -15,9 +15,14 @@ int do_start(char* arg0);
 int do_logout();
 
 /**
- * Main Game Page function
- * show games list and commands
- * and execute the commands
+ * Game List Page module
+ * It shows game list and commands
+ *
+ * Flow:
+ * 1. get a valid command from user
+ * 2. send the request to server and get response
+ * 3. if starting the game, enter into game module
+ * 4. loop back
  */
 void game_page(struct Session* session) {
     int ret;
@@ -76,7 +81,7 @@ void game_page(struct Session* session) {
 }
 
 /**
- *
+ * Manage the "start" command
  * return -1 if error
  */
 int do_start(char* arg0) {

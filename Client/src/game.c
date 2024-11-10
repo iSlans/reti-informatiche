@@ -1,12 +1,11 @@
 /**
- * Project escape room game core part
+ * Escape room Game core part
  *
- * After initial game setup on both client and server,
- *
- * 1. the user need to input a valid command
- * 2. the client sends the command to server and get the response
+ * After initial game setup on both client and server:
+ * 1. get a valid command from user
+ * 2. sends the command to server and get the response
  * 3. the game state updates according to the response
- *
+ * 4. check win and exit or loop back
  */
 
 #include "games_list.h"
@@ -25,8 +24,8 @@ struct GameSession {
     int phase;
 
     time_t end_time;
-    unsigned int bag_quantity;
-    unsigned int bag_size;
+    // unsigned int bag_quantity;
+    // unsigned int bag_size;
 
     // char token_list[256];
     unsigned int token_earned;
@@ -53,15 +52,19 @@ enum GameStatus {
 
 static enum GameCommand get_command(char* arg0, char* arg1);
 static int do_init_game(struct GameSession* session);
+static int do_get_game_status(struct GameSession* session);
+
+/**
+ * Here all the functions to manage every game command
+ */
 static int do_look(struct GameSession* session, char* arg0);
 static int do_take(struct GameSession* session, char* arg0);
 static int do_drop(struct GameSession* session, char* arg0);
 static int do_use(struct GameSession* session, char* arg0, char* arg1);
 static int do_objs(struct GameSession* session);
-static int do_get_game_status(struct GameSession* session);
 
 /**
- * The main game method
+ * The main game entry point
  */
 void play_game(char* game_id) {
     int ret;
@@ -82,6 +85,10 @@ void play_game(char* game_id) {
         .status = 0,
     };
 
+    /* -------------------------------------------------------------------------- */
+    /*                           INITIAL GAME DATA SETUP                          */
+    /* -------------------------------------------------------------------------- */
+
     // server init game, set up time, game data
     ret = do_init_game(&game_session);
     if (ret == -1) {
@@ -97,6 +104,9 @@ void play_game(char* game_id) {
     printf("\n%s\n", msg_command_list);
 
     do {
+        /* -------------------------------------------------------------------------- */
+        /*                       GET USER INPUT AND SEND REQUEST                      */
+        /* -------------------------------------------------------------------------- */
         int print_state = 1;
 
         char arg0[32];
@@ -142,12 +152,19 @@ void play_game(char* game_id) {
             default:;
         }
 
-        // check status win/lose
+        /* -------------------------------------------------------------------------- */
+        /*                              UPDATE GAME STATE                             */
+        /* -------------------------------------------------------------------------- */
+
         ret = do_get_game_status(&game_session);
         if (ret == -1) {
             printf("Could not fetch game status, returning to game list page...\n");
             return;
         }
+
+        /* -------------------------------------------------------------------------- */
+        /*                                  CHECK WIN                                 */
+        /* -------------------------------------------------------------------------- */
 
         switch (game_session.status) {
             case GAME_STATUS_WIN:
@@ -168,6 +185,7 @@ void play_game(char* game_id) {
                 break;
         }
 
+        // print some data as required
         if (print_state) {
             time_t diff = game_session.end_time - time(NULL);
             if (diff < 0) diff = 0;
@@ -192,6 +210,7 @@ void play_game(char* game_id) {
     return;
 
 unhandled_error:
+    // If any unexpected error, just exit from the game
     printf("Error unhandled error, ending game... \n");
 }
 
@@ -257,6 +276,9 @@ static enum GameCommand get_command(char* arg0, char* arg1) {
     return command_id;
 }
 
+/**
+ * Manage the initial game setup
+ */
 static int do_init_game(struct GameSession* session) {
     int ret;
     char payload[128] = "";
@@ -274,6 +296,7 @@ static int do_init_game(struct GameSession* session) {
         return -1;
     }
 
+    // Parse the server response
     struct ServerResponse {
         int status;
         int phase;
@@ -365,6 +388,7 @@ static int do_take(struct GameSession* session, char* arg0) {
     };
     struct ServerResponse resp;
 
+    // Manage enigma
     if (strncmp(response, "OK ENIGMA", 9) == 0) {
         sscanf(response, "OK ENIGMA %1023[^\\0]", resp.message);
         printf("%s\n", resp.message);
@@ -385,6 +409,7 @@ static int do_take(struct GameSession* session, char* arg0) {
 
     return 0;
 }
+
 static int do_drop(struct GameSession* session, char* arg0) {
     if (strcmp(arg0, "") == 0) {
         printf("Missing <object>, select which object to drop, e.g. 'drop libro'\n");
@@ -413,6 +438,7 @@ static int do_drop(struct GameSession* session, char* arg0) {
 
     return 0;
 }
+
 static int do_use(struct GameSession* session, char* arg0, char* arg1) {
     if (strcmp(arg0, "") == 0) {
         printf("Missing <object>, select which object to use, e.g. 'use libro'\n");
@@ -447,6 +473,7 @@ static int do_use(struct GameSession* session, char* arg0, char* arg1) {
 
     return 0;
 }
+
 static int do_objs(struct GameSession* session) {
     int ret;
     char payload[128] = "";

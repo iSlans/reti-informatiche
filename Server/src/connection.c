@@ -7,6 +7,12 @@
 
 #include "logging.h"
 
+/**
+ * Module to manage all the part about socket connections, data transmissions
+ * It wraps socket api, send, recv
+ * and exposes "methods" to use
+ */
+
 #define MAX_REQUEST_LEN 1024
 #define MAX_RESPONSE_LEN 1024
 
@@ -19,6 +25,10 @@ static int g_listener;
 static int g_port;
 static char g_ip[16];
 
+/**
+ * Create a listener socket,
+ * doing bind and listen
+ */
 static int activate_listener_socket(const char* ip, int port) {
     struct sockaddr_in server_addr;
     int listener;
@@ -57,7 +67,10 @@ static int activate_listener_socket(const char* ip, int port) {
     return listener;
 }
 
-static int listener_accept(/*client_addr*/) {
+/**
+ * Accept a new socket from listener
+ */
+static int listener_accept() {
     struct sockaddr_in client;
     socklen_t len;
     int fd;
@@ -95,6 +108,10 @@ static int receive_from_fd(int fd, char* buffer) {
     // int error = 0;
     char buf[MAX_REQUEST_LEN];
 
+    /* -------------------------------------------------------------------------- */
+    /*                           RECEIVE MESSAGE LENGTH                           */
+    /* -------------------------------------------------------------------------- */
+
     uint16_t msg_len;
 
     ret = recv(fd, &msg_len, sizeof(uint16_t), 0);
@@ -109,6 +126,10 @@ static int receive_from_fd(int fd, char* buffer) {
         // recv(fd, buf, MAX_REQUEST_LEN, 0);
         return -1;
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                               RECEIVE MESSAGE                              */
+    /* -------------------------------------------------------------------------- */
 
     len = ntohs(msg_len);
     if (len > MAX_REQUEST_LEN) {
@@ -134,6 +155,9 @@ static int receive_from_fd(int fd, char* buffer) {
     return ret;
 }
 
+/**
+ * Send a message to client fd
+ */
 static int send_to_fd(int fd, char* payload) {
     int ret;
     int len = strlen(payload) + 1;
@@ -143,6 +167,10 @@ static int send_to_fd(int fd, char* payload) {
         return -1;
     }
 
+    /* -------------------------------------------------------------------------- */
+    /*                             SEND MESSAGE LENGTH                            */
+    /* -------------------------------------------------------------------------- */
+
     uint16_t msg_len = htons(len);
 
     ret = send(fd, &msg_len, sizeof(uint16_t), 0);
@@ -150,6 +178,10 @@ static int send_to_fd(int fd, char* payload) {
         perror("Error send msg len: ");
         return -1;
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                SEND MESSAGE                                */
+    /* -------------------------------------------------------------------------- */
 
     ret = send(fd, payload, len, 0);
     if (ret < 0) {
@@ -164,6 +196,9 @@ static int close_fd(int fd) {
     return close(fd);
 }
 
+/**
+ * Object who expose all the methods
+ */
 const struct Connection connection = {
     .listen = activate_listener_socket,
     .accept = listener_accept,

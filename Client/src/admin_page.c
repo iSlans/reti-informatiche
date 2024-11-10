@@ -21,8 +21,11 @@ int do_list(char*);
 int do_update(char*);
 
 /**
- * show initial screen
- * and manage admin commands
+ * Admin panel where the admin user can view and modify clients data
+ * Simple flow:
+ * 1. get a command
+ * 2. send the request and get the response
+ * 3. loop back until exit command
  */
 void admin_page(struct Session* session) {
     int ret;
@@ -71,6 +74,10 @@ void admin_page(struct Session* session) {
     return;
 }
 
+/**
+ * Get a command from stdin
+ * will loop until getting a valid command
+ */
 int get_admin_page_command(char* params) {
     enum AdminCommand command_id;
     int valid = 0;
@@ -106,7 +113,7 @@ int get_admin_page_command(char* params) {
 }
 
 /**
- *
+ * Manage the "list <smt>" command, send the relative request to server
  * return -1 if error
  */
 int do_list(char* args) {
@@ -140,6 +147,9 @@ int do_list(char* args) {
     return -1;
 }
 
+/**
+ * Manage the "update <smt>" command
+ */
 int do_update(char* args) {
     int ret;
 

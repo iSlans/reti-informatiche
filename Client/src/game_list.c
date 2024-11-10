@@ -9,13 +9,13 @@ struct RoomGame available_games[] = {
     {
         .id = "1",
         .name = "Elementals",
-        .play = play_game,
+        // .play = play_game,
         // .code = 1,
     },
     {
         .id = "2",
         .name = "test",
-        .play = play_game,
+        // .play = play_game,
         // .code = 1,
     },
 };

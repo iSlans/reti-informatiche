@@ -4,9 +4,9 @@
 // #define NUMBER_GAMES 1
 
 struct RoomGame {
-    char id[16];              // client side identifier
-    char name[16];            //
-    void (*play)(char* arg);  // 'executable' to run the game TODO remove this
+    char id[16];    // client side identifier
+    char name[16];  //
+    // void (*play)(char* arg);  // 'executable' to run the game TODO remove this
     // unsigned int code;     // server side identifier
     // ...
 };
