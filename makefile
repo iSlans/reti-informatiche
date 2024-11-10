@@ -15,6 +15,6 @@ other:
 
 .PHONY: clean # makes <make clean> work if exists a conflicting file named "clean"  
 clean:
-	rm *o test client server other
+	rm client server other
 # rm *o client server other
 

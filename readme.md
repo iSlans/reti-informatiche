@@ -1,4 +1,27 @@
-TCP, need a reliable data transport 
+# Implementation
+using TCP transport protocol, need a reliable data transport 
+
+communication between client and server consist of 2 send/recv:
+    - 1 send/recv first to tell how long the next message will be (binary data protocol)
+    - 1 send/recv for the effective message (text data protocol)
+
+The state is server-side, where keeps track of user and game state.
+
+## Server
+server implementation is iterative, I/O multiplexing. 
+It's designed so it can serve multiple clients, multiple requests from clients and stdin.
+It can scale up, not as much as a concurrent server but It's not expected to reach very high numbers of connections and requests.
+Also being iterative makes the implementation simpler than a concurrent server.
+
+## Client
+Upon tcp connection, a client is always connected, until errors and client close.
+The client mainly awaits a user input, then send the request to server and expect a response from it. 
+
+
+
+
+
+
 
 
 ```
@@ -18,11 +41,11 @@ GAM ACTION
 
 ```
 
-| client     | server  |
-| ---------- | ------- |
-| USR LOGIN  | OK / NK |
-| USR SIGNUP | OK / NK |
-|            |         |
+| client request       | accepted response |
+| -------------------- | ----------------- |
+| USR LOGIN name pass  | OK / NK           |
+| USR SIGNUP name pass | OK / NK           |
+| USR LOGOUT           | OK                |
 
 
 GAME
