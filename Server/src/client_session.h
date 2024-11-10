@@ -19,7 +19,10 @@ char* serialize_game_data(struct GameData*);
 
 struct ClientState {
     int is_logged;
+    int is_admin;
+    char username[32];
     int selected_game;
+    int is_playing;
     struct GameData game_data;
 };
 
@@ -28,6 +31,7 @@ struct ClientList {
     void (*remove)(int fd);
     struct ClientState* (*add)(int fd);
     struct ClientState* (*find)(int fd);
+    char* (*get_all)();
 };
 
 extern struct ClientList client_list;

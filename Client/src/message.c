@@ -9,6 +9,7 @@ struct Message message = {
         ">> signup              - to register a new account\n"
         ">> end                 - to exit and close the game\n"
         ">> help                - to show this message again\n"
+        ">> admin               - to enter admin mode\n"
 
     ,
     .game_list_page =

@@ -51,6 +51,8 @@ int handle_game1(int fd, struct ClientState* client, char* request_type, char* r
         int n_flags = TOTAL_FLAGS;
         time_t end_time = time(NULL) + GAME_TIME;
 
+        client->is_playing = 1;
+
         client->game_data.end_time = end_time;
         client->game_data.status = GAME_STATUS_PLAYING;
         client->game_data.phase = 1;
@@ -76,6 +78,7 @@ int handle_game1(int fd, struct ClientState* client, char* request_type, char* r
     time_t diff = client->game_data.end_time - time(NULL);
     if (diff <= 0) {
         client->game_data.status = GAME_STATUS_TIMEOUT;
+        client->is_playing = 0;
         // connection.send(fd, "NK Game timeout");
         // return 1;
     }
@@ -173,7 +176,7 @@ int handle_game1(int fd, struct ClientState* client, char* request_type, char* r
 
             if (bag_quantity >= client->game_data.bag_size) {
                 response = "full.take";
-                int a = 0;
+                // int a = 0;
                 goto take_send_response;
             }
         }
@@ -364,7 +367,10 @@ int handle_game1(int fd, struct ClientState* client, char* request_type, char* r
                     response = "phase6.use libro";
                     client->game_data.flags[OBJ_libro] = FLAG_FREE;
                     client->game_data.phase = 7;
-                    client->game_data.status = GAME_STATUS_WIN;
+                    if (client->game_data.status == GAME_STATUS_PLAYING) {
+                        client->game_data.status = GAME_STATUS_WIN;
+                        client->is_playing = 0;
+                    }
                 } else {
                     response = "wrong.missing.use";
                 }

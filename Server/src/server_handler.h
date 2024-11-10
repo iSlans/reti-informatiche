@@ -24,6 +24,7 @@ enum Command {
 enum ClientCommand {
     CLIENT_USR,
     CLIENT_GMN,
+    CLIENT_ADM,
     CLIENT_INVALID
 };
 

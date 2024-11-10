@@ -9,5 +9,6 @@ void login_page(struct Session* session);
 enum UserCommand get_login_page_command();
 int do_login();
 int do_signup();
+int do_admin();
 
 #endif

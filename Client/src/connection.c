@@ -135,9 +135,14 @@ static int request(char* payload, char* response, unsigned int resp_len) {
     char buffer[MAX_RESPONSE_SIZE];
 
     ret = recv(conn_socket, &msg_len, sizeof(uint16_t), 0);
-    if (ret == -1 || ret == 0) {
+    if (ret == -1) {
         perror("Error receiving response len");
         close(conn_socket);
+        return -1;
+    }
+    if (ret == 0) {
+        printf("Server closed connection...\n");
+        conn_is_open = 0;
         return -1;
     }
 

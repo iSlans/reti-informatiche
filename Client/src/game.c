@@ -171,18 +171,20 @@ void play_game(char* game_id) {
         if (print_state) {
             time_t diff = game_session.end_time - time(NULL);
             if (diff < 0) diff = 0;
-            struct tm* time_data;
-            time_data = gmtime(&diff);
+            struct tm* time_left;
+            time_left = gmtime(&diff);
+            // printf("%lu\n%s", game_session.end_time, asctime(time_left));
 
             printf(
                 "\n"
                 "Token Collected: %u\t"
                 "Remaining: %u\t"
-                "Time left: %dm %ds\n\n",
+                "Time left: %02d:%02d:%02d\n\n",
                 game_session.token_earned,
                 game_session.token_left,
-                time_data->tm_min,
-                time_data->tm_sec);
+                time_left->tm_hour,
+                time_left->tm_min,
+                time_left->tm_sec);
         }
 
         // unhandled_error:

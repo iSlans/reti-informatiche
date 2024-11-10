@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "src/admin_page.h"
 #include "src/connection.h"
 #include "src/game_page.h"
 #include "src/login_page.h"
@@ -17,6 +18,7 @@ int main() {
     int ret;
     struct Session session = {
         .logged = 0,
+        .admin_mode = 0,
         .close_client = 0,
     };
 
@@ -35,7 +37,11 @@ int main() {
         if (!session.logged) {
             login_page(&session);
         }
-        game_page(&session);
+        if (session.admin_mode) {
+            admin_page(&session);
+        } else {
+            game_page(&session);
+        }
     } while (!session.close_client);
 
     connection.close();

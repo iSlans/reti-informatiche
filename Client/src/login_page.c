@@ -31,13 +31,19 @@ void login_page(struct Session* session) {
             case COMMAND_LOGIN:
                 ret = do_login();
                 if (ret == -1) exit(-1);
-                if (ret == 1) session->logged = 1;
+                if (ret == 1) {
+                    session->logged = 1;
+                    session->admin_mode = 0;
+                }
                 break;
 
             case COMMAND_SIGNUP:
                 ret = do_signup();
                 if (ret == -1) exit(-1);
-                if (ret == 1) session->logged = 1;
+                if (ret == 1) {
+                    session->logged = 1;
+                    session->admin_mode = 0;
+                }
                 // session->logged = 1;
                 break;
 
@@ -50,6 +56,15 @@ void login_page(struct Session* session) {
                 printf("\n%s\n", message.login_page);
                 break;
 
+            case COMMAND_ADMIN:
+                ret = do_admin();
+                if (ret == -1) exit(-1);
+                if (ret == 1) {
+                    session->logged = 1;
+                    session->admin_mode = 1;
+                }
+                // session->logged = 1;
+                break;
             default:;
         }
 
@@ -83,6 +98,9 @@ enum UserCommand get_login_page_command() {
             valid = 1;
         } else if (strcmp(command, "help") == 0) {
             command_id = COMMAND_HELP;
+            valid = 1;
+        } else if (strcmp(command, "admin") == 0) {
+            command_id = COMMAND_ADMIN;
             valid = 1;
         }
 
@@ -182,6 +200,45 @@ int do_signup() {
 
     if (strcmp(response, "OK") == 0) {
         return 1;
+    }
+
+    return -1;
+}
+
+int do_admin() {
+    int ret;
+    int valid = 0;
+
+    char user[32] = "";
+    char pass[32] = "";
+    char line[128] = "";
+    char payload[128];
+    char response[128];
+
+    do {
+        printf("Enter <username> <password> of your admin account\n");
+        get_input_line(line, sizeof(line));
+        sscanf(line, "%31s %31s", user, pass);
+
+        if (strcmp(user, "") == 0 || strcmp(pass, "") == 0) {
+            printf("Invalid input\n");
+        } else {
+            valid = 1;
+        }
+    } while (!valid);
+
+    sprintf(payload, "ADM LOGIN %s %s", user, pass);
+    ret = connection.request(payload, response, sizeof(response));
+    if (ret == -1) {
+        printf("Error on reaching the server, try close and restart application...\n");
+        return -1;
+    }
+
+    if (strcmp(response, "OK") == 0) {
+        return 1;
+    } else if (strcmp(response, "NK") == 0) {
+        printf("Wrong credentials!\n");
+        return 0;
     }
 
     return -1;

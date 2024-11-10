@@ -106,6 +106,7 @@ void handle_listener(struct ServerState* server) {
 }
 
 int handle_user(struct ClientState* client, char* type, char* args);
+int handle_admin(int fd, struct ClientState* client, char* type, char* args);
 
 /**
  * Handle a client request.
@@ -168,6 +169,11 @@ void handle_client_fd(int fd, struct ServerState* server) {
             if (ret == -1) goto close_client;
             return;
         }
+    }
+
+    if (command == CLIENT_ADM) {
+        ret = handle_admin(fd, client, type, args);
+        if (ret == -1) goto close_client;
     }
 
     // ret = connection.send(fd, "OK");
@@ -266,6 +272,7 @@ int handle_user(struct ClientState* client, char* type, char* args) {
             if (strstr(line, substring)) {
                 logging_info("Login successful");
                 client->is_logged = 1;
+                strcpy(client->username, username);
                 fclose(file);
                 return 1;
             }
@@ -278,6 +285,109 @@ int handle_user(struct ClientState* client, char* type, char* args) {
 
     logging_error("Unknown user request type: %s", type);
     return -1;
+}
+
+int handle_admin(int fd, struct ClientState* client, char* type, char* args) {
+    if (strcmp(type, "LOGIN") == 0) {
+        if (client->is_logged) {
+            return -1;
+        }
+
+        FILE* file;
+        if ((file = fopen("admin.txt", "r")) == NULL) {
+            logging_error("Error opening file admin.txt");
+            return -1;
+        }
+
+        char line[256] = "";
+        char username[32];
+        char password[32];
+        sscanf(args, "%s %s", username, password);
+
+        while (!feof(file)) {
+            fgets(line, sizeof line, file);
+
+            char buffer[256];
+            sprintf(buffer, "user:%s pass:%s", username, password);
+            if (strstr(line, buffer)) {
+                fclose(file);
+                logging_info("Login successful");
+                client->is_logged = 1;
+                client->is_admin = 1;
+                strcpy(client->username, username);
+                connection.send(fd, "OK");
+                return 1;
+            }
+        }
+        fclose(file);
+
+        connection.send(fd, "NK");
+
+        logging_info("Credentials not found");
+        return 0;
+    }
+
+    if (!client->is_logged || !client->is_admin) {
+        logging_error("Unauthorized attempt of admin command from client %d", fd);
+        return -1;
+    }
+
+    if (strcmp(type, "LIST") == 0) {
+        if (strncmp(args, "game", 4) != 0) {
+            connection.send(fd, "OK operation currently not supported");
+            return 0;
+        }
+
+        char* data = client_list.get_all();
+        if (data == NULL) {
+            connection.send(fd, "OK list too large to be sent");
+            return 0;
+        }
+
+        char response[1024];
+        snprintf(response, 1024, "OK %s", data);
+        connection.send(fd, response);
+        return 0;
+    }
+
+    if (strcmp(type, "UPDATE") == 0) {
+        if (strncmp(args, "game", 4) != 0) {
+            connection.send(fd, "OK operation currently not supported");
+            return 0;
+        }
+
+        int id = 0;
+        int value = 0;
+        char type[64] = "";
+
+        // ADM UPDATE game <client_id> TIME <+-seconds>
+        sscanf(args, "game %d %s %d", &id, type, &value);
+
+        struct ClientState* target_client = client_list.find(id);
+        if (!target_client) {
+            connection.send(fd, "OK Client not found");
+            return 0;
+        }
+
+        if (strcmp(type, "TIME") == 0) {
+            if (!target_client->is_playing) {
+                connection.send(fd, "OK Nothing to update, client is not playing...");
+                return 0;
+            }
+            // logging_debug("b: %lu", target_client->game_data.end_time);
+            target_client->game_data.end_time += value;
+            // logging_debug("a: %lu", target_client->game_data.end_time);
+
+            connection.send(fd, "OK Updated");
+            return 0;
+        }
+
+        connection.send(fd, "OK Command not supported, currently only supports time updates");
+        return 0;
+    }
+
+    connection.send(fd, "NK Unknown command");
+    return 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -310,12 +420,14 @@ static int get_command(char* arg0) {
 
 static void parse_request(char* request, int* command, char* type, char* args) {
     char command_str[16];
-    sscanf(request, "%15s %15s %255[^\\0]", command_str, type, args);
+    sscanf(request, "%15s %15s %255[^\n]", command_str, type, args);
 
     *command = CLIENT_INVALID;
     if (strcmp(command_str, "USR") == 0) {
         *command = CLIENT_USR;
     } else if (strcmp(command_str, "GMN") == 0) {
         *command = CLIENT_GMN;
+    } else if (strcmp(command_str, "ADM") == 0) {
+        *command = CLIENT_ADM;
     }
 }

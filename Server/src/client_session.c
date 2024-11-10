@@ -56,9 +56,8 @@ static void my_list_init() {
 }
 
 static struct ClientState* my_list_insert(int fd) {
-    FDClientDict* elem = malloc(sizeof(FDClientDict));
-    elem->client = malloc(sizeof(struct ClientState));
-    memset(elem, 0, sizeof elem);
+    FDClientDict* elem = calloc(1, sizeof(FDClientDict));
+    elem->client = calloc(1, sizeof(struct ClientState));
     elem->fd = fd;
     LIST_INSERT_HEAD(&head, elem, entries);
     return elem->client;
@@ -69,6 +68,7 @@ static void my_list_remove(int fd) {
     LIST_FOREACH(elem, &head, entries) {
         if (elem->fd == fd) {
             LIST_REMOVE(elem, entries);
+            free(elem->client->game_data.flags);
             free(elem->client);
             free(elem);
             break;
@@ -88,9 +88,27 @@ static struct ClientState* my_list_find(int fd) {
     return NULL;
 }
 
+static char* my_list_get_usernames() {
+    char* data = calloc(1024, sizeof(char));
+    char buffer[64];
+    const int limit = 1000;
+
+    FDClientDict* elem;
+    LIST_FOREACH(elem, &head, entries) {
+        snprintf(buffer, 64, "fd: %d, user: %s\n", elem->fd, elem->client->username);
+        if (strlen(data) + strlen(buffer) + 2 >= limit) {
+            free(data);
+            return NULL;
+        }
+        strcat(data, buffer);
+    }
+    return data;
+}
+
 struct ClientList client_list = {
     .init = my_list_init,
     .add = my_list_insert,
     .remove = my_list_remove,
     .find = my_list_find,
+    .get_all = my_list_get_usernames,
 };
