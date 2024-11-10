@@ -2,20 +2,16 @@
 CC := gcc
 CFLAGS := -Wall -std=c99
 
-all: test
-# all: server client other 
-
-test: 
-	$(CC) $(CFLAGS) -o test Server/test.c Server/*/*.c
+all: server client other 
 	
 server: 
-	$(CC) $(CFLAGS) -o server Server/main.c Server/*/*.c
+	$(CC) $(CFLAGS) -o server Server/main.c Server/src/*.c
 
 client: 
-	$(CC) $(CFLAGS) -o client Client/main.c Client/*/*.c
+	$(CC) $(CFLAGS) -o client Client/main.c Client/src/*.c
 
 other: 
-	$(CC) $(CFLAGS) -o other other.c
+	$(CC) $(CFLAGS) -o other Client/main.c Client/src/*.c
 
 .PHONY: clean # makes <make clean> work if exists a conflicting file named "clean"  
 clean:
